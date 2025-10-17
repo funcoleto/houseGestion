@@ -41,25 +41,34 @@ class Vivienda(models.Model):
 
 class HorarioVisita(models.Model):
     """
-    Define los horarios disponibles para visitar una vivienda.
+    Define los horarios disponibles para visitar una vivienda en una fecha específica.
     """
-    DIAS_SEMANA = [
-        ("lunes", "Lunes"),
-        ("martes", "Martes"),
-        ("miercoles", "Miércoles"),
-        ("jueves", "Jueves"),
-        ("viernes", "Viernes"),
-        ("sabado", "Sábado"),
-        ("domingo", "Domingo"),
-    ]
-
     vivienda = models.ForeignKey(Vivienda, related_name='horarios', on_delete=models.CASCADE)
-    dia_semana = models.CharField(max_length=10, choices=DIAS_SEMANA)
+    fecha = models.DateField()
     hora_inicio = models.TimeField()
     hora_fin = models.TimeField()
 
     class Meta:
-        unique_together = ('vivienda', 'dia_semana', 'hora_inicio', 'hora_fin')
+        # Evita que se creen múltiples franjas horarias idénticas para la misma vivienda en la misma fecha.
+        unique_together = ('vivienda', 'fecha', 'hora_inicio', 'hora_fin')
+        ordering = ['fecha', 'hora_inicio']
 
     def __str__(self):
-        return f"{self.vivienda.nombre} - {self.get_dia_semana_display()} de {self.hora_inicio} a {self.hora_fin}"
+        return f"{self.vivienda.nombre} - {self.fecha.strftime('%d/%m/%Y')} de {self.hora_inicio.strftime('%H:%M')} a {self.hora_fin.strftime('%H:%M')}"
+
+class ArrendatarioAutorizado(models.Model):
+    """
+    Representa a un arrendatario cuyo teléfono ha sido autorizado por un administrador
+    para solicitar una visita a una vivienda específica.
+    """
+    vivienda = models.ForeignKey(Vivienda, related_name='arrendatarios_autorizados', on_delete=models.CASCADE)
+    telefono = models.CharField(max_length=20, help_text="Número de teléfono completo con prefijo internacional (ej. +34666666666)")
+
+    class Meta:
+        # Evita que el mismo número de teléfono se añada varias veces a la misma vivienda.
+        unique_together = ('vivienda', 'telefono')
+        verbose_name = "Arrendatario Autorizado"
+        verbose_name_plural = "Arrendatarios Autorizados"
+
+    def __str__(self):
+        return f"{self.telefono} autorizado para {self.vivienda.nombre}"
