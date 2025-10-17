@@ -1,0 +1,10 @@
+Hola {{ visita.nombre }},
+
+Te informamos de que tu visita para la vivienda "{{ visita.vivienda.nombre }}", programada para el {{ visita.fecha_hora|date:"d \d\e F \d\e Y \a \l\a\s H:i" }}, ha sido cancelada por el administrador.
+
+Lamentamos las molestias que esto pueda ocasionar.
+
+Si tienes alguna pregunta, por favor, contacta con el administrador.
+
+Saludos,
+El equipo de Gestión de Viviendas

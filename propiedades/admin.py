@@ -49,6 +49,10 @@ class ArrendatarioAutorizadoAdmin(admin.ModelAdmin):
     list_filter = ('vivienda',)
     search_fields = ('telefono',)
 
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.conf import settings
+
 @admin.register(Visita)
 class VisitaAdmin(admin.ModelAdmin):
     """
@@ -61,3 +65,26 @@ class VisitaAdmin(admin.ModelAdmin):
 
     # Hacemos que los campos de solo lectura se muestren en el panel de detalle.
     readonly_fields = ('cancelacion_token', 'creado_en', 'actualizado_en')
+
+    def delete_queryset(self, request, queryset):
+        """
+        Sobrescribe la acción de borrado para enviar notificaciones por email.
+        """
+        for visita in queryset:
+            # Solo enviamos email si la visita estaba confirmada
+            if visita.estado == 'CONFIRMADA':
+                asunto = f"Cancelación de tu visita para {visita.vivienda.nombre}"
+                contexto_email = {'visita': visita}
+                cuerpo_mensaje = render_to_string('propiedades/emails/cancelacion_por_admin.txt', contexto_email)
+
+                try:
+                    enviado = send_mail(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, [visita.email])
+                    if enviado:
+                        print(f"Notificación de cancelación por admin enviada con éxito a {visita.email}.")
+                    else:
+                        print(f"ERROR: No se pudo enviar la notificación de cancelación por admin a {visita.email}.")
+                except Exception as e:
+                    print(f"ERROR al enviar notificación de cancelación por admin: {e}")
+
+        # Llamamos al método original para que se realice el borrado
+        super().delete_queryset(request, queryset)

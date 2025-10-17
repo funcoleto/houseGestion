@@ -20,4 +20,7 @@ urlpatterns = [
 
     # Ejemplo: /visita/cancelar/a1b2c3d4.../
     path('visita/cancelar/<uuid:token>/', views.cancelar_visita_view, name='cancelar_visita'),
+
+    # Ejemplo: /visita/gestionar/a1b2c3d4.../
+    path('visita/gestionar/<uuid:token>/', views.gestionar_visita_view, name='gestionar_visita'),
 ]

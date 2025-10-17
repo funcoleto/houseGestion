@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionar mi Visita - Gestión de Viviendas</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 16px;
+        }
+        p {
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .details {
+            margin: 24px 0;
+            text-align: left;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        strong {
+            color: #34495e;
+        }
+        .actions {
+            margin-top: 24px;
+            display: flex;
+            justify-content: space-around;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        .btn-modificar {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-modificar:hover {
+            background-color: #2980b9;
+        }
+        .btn-cancelar {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn-cancelar:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gestionar mi Visita</h1>
+        <p>Hola, {{ visita.nombre }}. Ya tienes una visita programada.</p>
+
+        <div class="details">
+            <p><strong>Vivienda:</strong> {{ visita.vivienda.nombre }}</p>
+            <p><strong>Fecha y Hora:</strong> {{ visita.fecha_hora|date:"d \d\e F \d\e Y \a \l\a\s H:i" }}</p>
+        </div>
+
+        <p>¿Qué te gustaría hacer?</p>
+
+        <form method="post" class="actions">
+            {% csrf_token %}
+            <button type="submit" name="modificar" class="btn-modificar">Modificar Visita</button>
+            <button type="submit" name="cancelar" class="btn-cancelar">Cancelar Visita</button>
+        </form>
+    </div>
+</body>
+</html>

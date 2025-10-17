@@ -20,6 +20,12 @@ def acceso_arrendatario_view(request):
         if form.is_valid():
             telefono = form.cleaned_data['telefono']
 
+            # Primero, comprobamos si este teléfono ya tiene una visita confirmada.
+            visita_activa = Visita.objects.filter(telefono=telefono, estado='CONFIRMADA').first()
+            if visita_activa:
+                # Si ya tiene una visita, lo redirigimos a la página de gestión.
+                return redirect(reverse('propiedades:gestionar_visita', args=[visita_activa.cancelacion_token]))
+
             autorizaciones = ArrendatarioAutorizado.objects.filter(telefono=telefono)
             viviendas_ids = list(autorizaciones.values_list('vivienda_id', flat=True))
 
@@ -101,7 +107,14 @@ def agendar_visita_view(request, vivienda_id):
             }
             cuerpo_mensaje = render_to_string('propiedades/emails/confirmacion_visita.txt', contexto_email)
 
-            send_mail(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, [visita.email])
+            try:
+                enviado = send_mail(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, [visita.email])
+                if enviado:
+                    print(f"Correo de confirmación enviado con éxito a {visita.email}.")
+                else:
+                    print(f"ERROR: No se pudo enviar el correo de confirmación a {visita.email}.")
+            except Exception as e:
+                print(f"ERROR al enviar correo: {e}")
 
             return redirect(reverse('propiedades:confirmacion_visita', args=[visita.cancelacion_token]))
     else:
@@ -143,13 +156,47 @@ def cancelar_visita_view(request, token):
 
             emails_admin = [admin.email for admin in visita.vivienda.administradores.all()]
             if emails_admin:
-                send_mail(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, emails_admin)
+                try:
+                    enviado = send_mail(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, emails_admin)
+                    if enviado:
+                        print(f"Correo de cancelación enviado con éxito a los administradores: {', '.join(emails_admin)}.")
+                    else:
+                        print(f"ERROR: No se pudo enviar el correo de cancelación a los administradores.")
+                except Exception as e:
+                    print(f"ERROR al enviar correo de cancelación a admin: {e}")
 
             mensaje = "Tu visita ha sido cancelada con éxito."
 
         return render(request, 'propiedades/cancelar_visita.html', {'mensaje': mensaje})
 
     return render(request, 'propiedades/cancelar_visita.html', {'visita': visita})
+
+
+def gestionar_visita_view(request, token):
+    """
+    Muestra los detalles de una visita existente y permite modificarla o cancelarla.
+    """
+    visita = get_object_or_404(Visita, cancelacion_token=token, estado='CONFIRMADA')
+
+    if request.method == 'POST':
+        if 'cancelar' in request.POST:
+            # Si se hace clic en "Cancelar", redirigimos a la página de cancelación.
+            return redirect(reverse('propiedades:cancelar_visita', args=[visita.cancelacion_token]))
+        elif 'modificar' in request.POST:
+            # Para "Modificar", cancelamos la visita actual y redirigimos al formulario.
+            # Primero, guardamos el teléfono en la sesión para el acceso.
+            request.session['telefono_autorizado'] = visita.telefono
+            request.session['viviendas_autorizadas_ids'] = [visita.vivienda.id]
+            request.session.save()
+
+            # Cancelamos la visita actual
+            visita.estado = 'CANCELADA'
+            visita.veces_cancelada += 1
+            visita.save()
+
+            return redirect(reverse('propiedades:agendar_visita', args=[visita.vivienda.id]))
+
+    return render(request, 'propiedades/gestionar_visita.html', {'visita': visita})
 
 
 # Vista de ejemplo, mantener por ahora para que las URLs no fallen.
