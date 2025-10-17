@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import HttpResponse, HttpResponseForbidden
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
 from datetime import datetime, timedelta
@@ -83,19 +83,37 @@ def agendar_visita_view(request, vivienda_id):
     viviendas_autorizadas_ids = request.session.get('viviendas_autorizadas_ids', [])
 
     if not telefono_autorizado or vivienda_id not in viviendas_autorizadas_ids:
-        return HttpResponseForbidden("No tienes permiso para acceder a esta página.")
+        # Si el usuario no está autorizado, comprobamos si está en modo modificación.
+        # Esto permite que el flujo de modificación funcione sin pasar por el acceso por teléfono.
+        modificar_visita_id = request.session.get('modificar_visita_id')
+        if not modificar_visita_id:
+            return HttpResponseForbidden("No tienes permiso para acceder a esta página.")
+
+    visita_a_modificar = None
+    modificar_visita_id = request.session.get('modificar_visita_id')
+    if modificar_visita_id:
+        visita_a_modificar = get_object_or_404(Visita, id=modificar_visita_id)
 
     horarios_disponibles = _get_horarios_disponibles(vivienda)
 
     if request.method == 'POST':
-        form = AgendarVisitaForm(request.POST)
+        form = AgendarVisitaForm(request.POST, instance=visita_a_modificar)
         form.fields['horario_disponible'].choices = horarios_disponibles
 
         if form.is_valid():
+            # Si se está modificando, cancelamos la visita antigua primero.
+            if visita_a_modificar:
+                visita_a_modificar.estado = 'CANCELADA'
+                visita_a_modificar.veces_cancelada += 1
+                visita_a_modificar.save()
+                # Limpiamos el ID de la sesión
+                del request.session['modificar_visita_id']
+
             visita = form.save(commit=False)
             visita.vivienda = vivienda
-            visita.telefono = telefono_autorizado
+            visita.telefono = visita_a_modificar.telefono if visita_a_modificar else telefono_autorizado
             visita.fecha_hora = datetime.fromisoformat(form.cleaned_data['horario_disponible'])
+            visita.estado = 'CONFIRMADA' # Aseguramos que la nueva visita esté confirmada
             visita.save()
 
             # Enviar email de confirmación al arrendatario
@@ -103,22 +121,23 @@ def agendar_visita_view(request, vivienda_id):
             contexto_email = {
                 'visita': visita,
                 'vivienda': vivienda,
-                'enlace_cancelacion': request.build_absolute_uri(reverse('propiedades:cancelar_visita', args=[visita.cancelacion_token]))
+                'enlace_cancelacion': request.build_absolute_uri(reverse('propiedades:gestionar_visita', args=[visita.cancelacion_token]))
             }
             cuerpo_mensaje = render_to_string('propiedades/emails/confirmacion_visita.txt', contexto_email)
+            html_cuerpo_mensaje = render_to_string('propiedades/emails/confirmacion_visita.html', contexto_email)
 
             try:
-                enviado = send_mail(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, [visita.email])
-                if enviado:
-                    print(f"Correo de confirmación enviado con éxito a {visita.email}.")
-                else:
-                    print(f"ERROR: No se pudo enviar el correo de confirmación a {visita.email}.")
+                msg = EmailMultiAlternatives(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, [visita.email])
+                msg.attach_alternative(html_cuerpo_mensaje, "text/html")
+                msg.send()
+                print(f"Correo de confirmación (modificación) enviado con éxito a {visita.email}.")
             except Exception as e:
-                print(f"ERROR al enviar correo: {e}")
+                print(f"ERROR al enviar correo de confirmación (modificación): {e}")
 
             return redirect(reverse('propiedades:confirmacion_visita', args=[visita.cancelacion_token]))
     else:
-        form = AgendarVisitaForm()
+        # Si estamos modificando, precargamos el formulario con los datos de la visita.
+        form = AgendarVisitaForm(instance=visita_a_modificar)
         if not horarios_disponibles:
             form.fields['horario_disponible'].widget.attrs['disabled'] = True
             form.fields['horario_disponible'].help_text = "No hay horarios disponibles para esta vivienda en este momento."
@@ -156,12 +175,12 @@ def cancelar_visita_view(request, token):
 
             emails_admin = [admin.email for admin in visita.vivienda.administradores.all()]
             if emails_admin:
+                html_cuerpo_mensaje = render_to_string('propiedades/emails/notificacion_cancelacion_admin.html', contexto_email)
                 try:
-                    enviado = send_mail(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, emails_admin)
-                    if enviado:
-                        print(f"Correo de cancelación enviado con éxito a los administradores: {', '.join(emails_admin)}.")
-                    else:
-                        print(f"ERROR: No se pudo enviar el correo de cancelación a los administradores.")
+                    msg = EmailMultiAlternatives(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, emails_admin)
+                    msg.attach_alternative(html_cuerpo_mensaje, "text/html")
+                    msg.send()
+                    print(f"Correo de cancelación enviado con éxito a los administradores: {', '.join(emails_admin)}.")
                 except Exception as e:
                     print(f"ERROR al enviar correo de cancelación a admin: {e}")
 
@@ -183,17 +202,11 @@ def gestionar_visita_view(request, token):
             # Si se hace clic en "Cancelar", redirigimos a la página de cancelación.
             return redirect(reverse('propiedades:cancelar_visita', args=[visita.cancelacion_token]))
         elif 'modificar' in request.POST:
-            # Para "Modificar", cancelamos la visita actual y redirigimos al formulario.
-            # Primero, guardamos el teléfono en la sesión para el acceso.
-            request.session['telefono_autorizado'] = visita.telefono
-            request.session['viviendas_autorizadas_ids'] = [visita.vivienda.id]
+            # Para "Modificar", guardamos los datos de la visita en la sesión para precargarlos.
+            request.session['modificar_visita_id'] = visita.id
             request.session.save()
 
-            # Cancelamos la visita actual
-            visita.estado = 'CANCELADA'
-            visita.veces_cancelada += 1
-            visita.save()
-
+            # Redirigimos al formulario de agendar, que detectará la modificación.
             return redirect(reverse('propiedades:agendar_visita', args=[visita.vivienda.id]))
 
     return render(request, 'propiedades/gestionar_visita.html', {'visita': visita})

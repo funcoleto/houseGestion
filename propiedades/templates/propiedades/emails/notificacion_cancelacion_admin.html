@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Notificación de Cancelación</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+            <td align="center">
+                <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="padding: 40px 20px; background-color: #f39c12; color: #ffffff; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                            <h1 style="margin: 0; font-size: 24px;">Notificación: Visita Cancelada</h1>
+                        </td>
+                    </tr>
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 30px; color: #333333; line-height: 1.6;">
+                            <p style="margin-top: 0;">Hola,</p>
+                            <p>Se ha cancelado una visita para la vivienda <strong>{{ visita.vivienda.nombre }}</strong>.</p>
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 20px 0; background-color: #f9f9f9; padding: 20px; border-radius: 5px;">
+                                <tr>
+                                    <td>
+                                        <p style="margin: 0;"><strong>Arrendatario:</strong> {{ visita.nombre }} {{ visita.apellidos }}</p>
+                                        <p style="margin: 10px 0;"><strong>Email:</strong> {{ visita.email }}</p>
+                                        <p style="margin: 0;"><strong>Teléfono:</strong> {{ visita.telefono }}</p>
+                                        <p style="margin: 10px 0 0 0;"><strong>Fecha que tenía reservada:</strong> {{ visita.fecha_hora|date:"d \d\e F \d\e Y \a \l\a\s H:i" }}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="margin-bottom: 0;">Este horario ha quedado libre de nuevo en el sistema.</p>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="padding: 20px; font-size: 12px; color: #7f8c8d; background-color: #ecf0f1; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+                            <p style="margin: 0;">Este es un mensaje automático del sistema de Gestión de Viviendas.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

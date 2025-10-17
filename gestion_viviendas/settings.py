@@ -146,11 +146,12 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Para pasar a producción, comenta la línea de arriba y descomenta las siguientes.
 # Deberás configurar estas variables de entorno en tu servidor.
-#
+
+DEFAULT_FROM_EMAIL = "Gestión de Viviendas App <noreply@gestionviviendas.com>"
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = os.environ.get('EMAIL_HOST')  # Ej: 'smtp.gmail.com'
 # EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
 # EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 't')
 # EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')  # Tu dirección de correo
 # EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD') # Tu contraseña de aplicación
-# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+# DEFAULT_FROM_EMAIL = f"Gestión de Viviendas App <{os.environ.get('EMAIL_HOST_USER')}>"

@@ -49,7 +49,7 @@ class ArrendatarioAutorizadoAdmin(admin.ModelAdmin):
     list_filter = ('vivienda',)
     search_fields = ('telefono',)
 
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
 
@@ -77,12 +77,12 @@ class VisitaAdmin(admin.ModelAdmin):
                 contexto_email = {'visita': visita}
                 cuerpo_mensaje = render_to_string('propiedades/emails/cancelacion_por_admin.txt', contexto_email)
 
+                html_cuerpo_mensaje = render_to_string('propiedades/emails/cancelacion_por_admin.html', contexto_email)
                 try:
-                    enviado = send_mail(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, [visita.email])
-                    if enviado:
-                        print(f"Notificación de cancelación por admin enviada con éxito a {visita.email}.")
-                    else:
-                        print(f"ERROR: No se pudo enviar la notificación de cancelación por admin a {visita.email}.")
+                    msg = EmailMultiAlternatives(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, [visita.email])
+                    msg.attach_alternative(html_cuerpo_mensaje, "text/html")
+                    msg.send()
+                    print(f"Notificación de cancelación por admin enviada con éxito a {visita.email}.")
                 except Exception as e:
                     print(f"ERROR al enviar notificación de cancelación por admin: {e}")
 
