@@ -31,7 +31,7 @@ Hemos creado un script que automatiza todo el proceso de instalación y ejecuci�
 1.  **Clona el repositorio:**
     ```bash
     git clone <URL-DEL-REPOSITORIO>
-    cd gestion-de-viviendas
+    cd houseGestion
     ```
 
 2.  **Ejecuta el script de instalación:**
@@ -43,7 +43,7 @@ El script se encargará de:
 *   Crear un entorno virtual.
 *   Instalar todas las dependencias.
 *   Configurar la base de datos.
-*   Crear un superusuario por defecto (`usuario: admin`, `contraseña: admin`).
+*   Crear un superusuario por defecto (`usuario: admin`, `contraseña: 1234`).
 *   Iniciar el servidor de desarrollo.
 
 Una vez que el script termine, la aplicación estará disponible en `http://127.0.0.1:8000/`.

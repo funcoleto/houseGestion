@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleccionar Vivienda - Gestión de Viviendas</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 24px;
+        }
+        .vivienda-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .vivienda-item {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            transition: box-shadow 0.3s;
+        }
+        .vivienda-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .vivienda-item a {
+            display: block;
+            padding: 20px;
+            text-decoration: none;
+            color: #34495e;
+        }
+        .vivienda-item h2 {
+            margin: 0 0 8px 0;
+            color: #3498db;
+        }
+        .vivienda-item p {
+            margin: 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Selecciona una Vivienda</h1>
+        <p>Tu número de teléfono está autorizado para solicitar una visita a las siguientes propiedades. Por favor, elige una:</p>
+
+        <ul class="vivienda-list">
+            {% for vivienda in viviendas %}
+                <li class="vivienda-item">
+                    <a href="{% url 'propiedades:agendar_visita' vivienda.id %}">
+                        <h2>{{ vivienda.nombre }}</h2>
+                        <p>{{ vivienda.direccion_completa }}</p>
+                    </a>
+                </li>
+            {% empty %}
+                <p>No se encontraron viviendas autorizadas.</p>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

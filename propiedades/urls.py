@@ -23,4 +23,7 @@ urlpatterns = [
 
     # Ejemplo: /visita/gestionar/a1b2c3d4.../
     path('visita/gestionar/<uuid:token>/', views.gestionar_visita_view, name='gestionar_visita'),
+
+    # Página para que el usuario elija a qué vivienda quiere solicitar visita
+    path('seleccionar-vivienda/', views.seleccionar_vivienda_view, name='seleccionar_vivienda'),
 ]

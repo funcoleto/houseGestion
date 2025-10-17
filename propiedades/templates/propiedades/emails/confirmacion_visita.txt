@@ -13,6 +13,8 @@ A continuación, un resumen de los datos que nos has proporcionado:
 - Menores a cargo: {{ visita.numero_menores }}
 - Mascotas: {% if visita.mascota %}Sí{% else %}No{% endif %}
 - Fumadores: {% if visita.fumador %}Sí{% else %}No{% endif %}
+- Puesto de trabajo: {{ visita.puesto_trabajo }}
+{% if visita.observaciones %}- Observaciones: {{ visita.observaciones }}{% endif %}
 
 Si necesitas cambiar o cancelar tu cita, puedes hacerlo a través del siguiente enlace:
 {{ enlace_cancelacion }}

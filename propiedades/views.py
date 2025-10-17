@@ -40,8 +40,7 @@ def acceso_arrendatario_view(request):
                 if len(viviendas_ids) == 1:
                     return redirect(reverse('propiedades:agendar_visita', args=[viviendas_ids[0]]))
                 else:
-                    # TODO: Implementar una página de selección si hay múltiples viviendas.
-                    return redirect(reverse('propiedades:agendar_visita', args=[viviendas_ids[0]]))
+                    return redirect(reverse('propiedades:seleccionar_vivienda'))
     else:
         form = AccesoArrendatarioForm()
 
@@ -87,12 +86,15 @@ def agendar_visita_view(request, vivienda_id):
     telefono_autorizado = request.session.get('telefono_autorizado')
     viviendas_autorizadas_ids = request.session.get('viviendas_autorizadas_ids', [])
 
-    if not telefono_autorizado or vivienda_id not in viviendas_autorizadas_ids:
-        # Si el usuario no está autorizado, comprobamos si está en modo modificación.
-        # Esto permite que el flujo de modificación funcione sin pasar por el acceso por teléfono.
-        modificar_visita_id = request.session.get('modificar_visita_id')
-        if not modificar_visita_id:
-            return HttpResponseForbidden("No tienes permiso para acceder a esta página.")
+    # --- Verificación de Seguridad Reforzada ---
+    viviendas_autorizadas_ids = request.session.get('viviendas_autorizadas_ids', [])
+    modificar_visita_id = request.session.get('modificar_visita_id')
+
+    # El usuario debe tener la vivienda en su lista de autorizadas O estar modificando una visita.
+    # Si está modificando, nos aseguramos de que la vivienda de la visita a modificar coincida con la URL.
+    if vivienda_id not in viviendas_autorizadas_ids:
+        if not modificar_visita_id or get_object_or_404(Visita, id=modificar_visita_id).vivienda.id != vivienda_id:
+             return HttpResponseForbidden("No tienes permiso para solicitar una visita para esta vivienda.")
 
     visita_a_modificar = None
     modificar_visita_id = request.session.get('modificar_visita_id')
@@ -215,6 +217,20 @@ def gestionar_visita_view(request, token):
             return redirect(reverse('propiedades:agendar_visita', args=[visita.vivienda.id]))
 
     return render(request, 'propiedades/gestionar_visita.html', {'visita': visita})
+
+
+def seleccionar_vivienda_view(request):
+    """
+    Muestra una lista de viviendas autorizadas para que el usuario elija
+    a cuál quiere solicitar una visita.
+    """
+    viviendas_ids = request.session.get('viviendas_autorizadas_ids', [])
+    if not viviendas_ids:
+        # Si no hay viviendas en la sesión, redirigimos al inicio del flujo.
+        return redirect(reverse('propiedades:acceso_arrendatario'))
+
+    viviendas = Vivienda.objects.filter(id__in=viviendas_ids)
+    return render(request, 'propiedades/seleccionar_vivienda.html', {'viviendas': viviendas})
 
 
 # Vista de ejemplo, mantener por ahora para que las URLs no fallen.
