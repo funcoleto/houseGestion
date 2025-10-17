@@ -1,5 +1,9 @@
 import uuid
 from django.db import models
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.conf import settings
+from django.urls import reverse
 
 class Administrador(models.Model):
     """
@@ -141,6 +145,37 @@ class SolicitudDeDocumentacion(models.Model):
 
     def __str__(self):
         return f"Solicitud de documentación para {self.visita.nombre} {self.visita.apellidos}"
+
+    class Meta:
+        verbose_name = "Solicitud de documentación"
+        verbose_name_plural = "Solicitudes de documentación"
+
+    def save(self, *args, **kwargs):
+        # Guardamos el objeto solo si es la primera vez para obtener un ID.
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+
+        # Si es un objeto nuevo y está pendiente, enviamos el email.
+        if is_new and self.estado == 'PENDIENTE':
+            visita = self.visita
+            asunto = f"Siguientes pasos para el alquiler de {visita.vivienda.nombre}"
+            # NOTA: No podemos usar request.build_absolute_uri aquí.
+            # Necesitaremos construir la URL base de otra manera en un futuro para producción.
+            # Por ahora, para desarrollo, funcionará asumiendo http://127.0.0.1:8000
+            enlace_subida = f"http://127.0.0.1:8000{reverse('propiedades:subir_documentos', args=[self.token_acceso])}"
+
+            contexto_email = {'visita': visita, 'enlace_subida': enlace_subida, 'aseguradora': visita.vivienda.nombre_aseguradora_impagos}
+
+            cuerpo_mensaje = render_to_string('propiedades/emails/instrucciones_documentacion.txt', contexto_email)
+            html_cuerpo_mensaje = render_to_string('propiedades/emails/instrucciones_documentacion.html', contexto_email)
+
+            try:
+                msg = EmailMultiAlternatives(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, [visita.email])
+                msg.attach_alternative(html_cuerpo_mensaje, "text/html")
+                msg.send()
+                print(f"Correo de solicitud de documentación enviado a {visita.email} (desde el modelo).")
+            except Exception as e:
+                print(f"ERROR al enviar correo de solicitud de documentación: {e}")
 
 
 class InquilinoDocumentacion(models.Model):

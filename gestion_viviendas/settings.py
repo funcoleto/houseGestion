@@ -20,6 +20,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 import os
+from dotenv import load_dotenv
+
+# Carga las variables de entorno desde el archivo .env que debe estar en la raíz del proyecto.
+load_dotenv()
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # La SECRET_KEY se lee de una variable de entorno para mayor seguridad.
@@ -140,18 +144,18 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 # --- CONFIGURACIÓN DE EMAIL ---
-# Durante el desarrollo, los correos se mostrarán en la consola.
-# Esto evita tener que configurar un servidor de correo real para probar.
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-# Para pasar a producción, comenta la línea de arriba y descomenta las siguientes.
-# Deberás configurar estas variables de entorno en tu servidor.
-
-DEFAULT_FROM_EMAIL = "Gestión de Viviendas App <noreply@gestionviviendas.com>"
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = os.environ.get('EMAIL_HOST')  # Ej: 'smtp.gmail.com'
-# EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-# EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 't')
-# EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')  # Tu dirección de correo
-# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD') # Tu contraseña de aplicación
-# DEFAULT_FROM_EMAIL = f"Gestión de Viviendas App <{os.environ.get('EMAIL_HOST_USER')}>"
+# Si EMAIL_HOST no está configurado en el .env, se usará el backend de consola.
+# Esto mantiene el comportamiento de desarrollo por defecto si no se configura un email real.
+if os.environ.get('EMAIL_HOST'):
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 't')
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+    # El remitente debe ser el mismo que EMAIL_HOST_USER para la mayoría de los proveedores.
+    DEFAULT_FROM_EMAIL = f"Gestión de Viviendas App <{EMAIL_HOST_USER}>"
+else:
+    # Durante el desarrollo, si no hay .env, los correos se mostrarán en la consola.
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = "Gestión de Viviendas App <noreply@gestionviviendas.com>"
