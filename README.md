@@ -1,18 +1,6 @@
-# 🏡 Gestión de Viviendas
+# 🏡 Gestión de Viviendas (houseGestion)
 
-Aplicación web para la gestión integral de propiedades de alquiler. Este proyecto está siendo desarrollado para facilitar a los administradores todo el ciclo de vida del alquiler, desde la captación de inquilinos hasta la finalización del contrato.
-
----
-
-## ✨ Características Actuales (Fase 1)
-
-*   **Proyecto Django Inicializado**: Base del proyecto creada con una estructura robusta y escalable.
-*   **Modelos de Datos**:
-    *   `Vivienda`: Para almacenar toda la información de la propiedad (dirección, referencia catastral, precio, etc.).
-    *   `Administrador`: Para gestionar los administradores de las viviendas.
-    *   `HorarioVisita`: Para definir los horarios de visita disponibles para cada vivienda.
-*   **Panel de Administración**: Interfaz de administración de Django configurada para gestionar viviendas, administradores y horarios de forma sencilla.
-*   **Base de Datos**: Configuración inicial con SQLite, lista para desarrollo.
+Aplicación web para la gestión integral de propiedades de alquiler. Este proyecto está siendo desarrollado para facilitar a los administradores todo el ciclo de vida del alquiler.
 
 ---
 
@@ -40,9 +28,9 @@ Hemos creado un script que automatiza todo el proceso de instalación y ejecuci�
     ```
 
 El script se encargará de:
-*   Crear un entorno virtual.
-*   Instalar todas las dependencias.
-*   Configurar la base de datos.
+*   Crear un entorno virtual (`venv`).
+*   Instalar todas las dependencias desde `requirements.txt`.
+*   Configurar la base de datos (aplicar migraciones).
 *   Crear un superusuario por defecto (`usuario: admin`, `contraseña: 1234`).
 *   Iniciar el servidor de desarrollo.
 
@@ -50,106 +38,70 @@ Una vez que el script termine, la aplicación estará disponible en `http://127.
 
 ---
 
-## 🔑 Acceder al Panel de Administración
+## 🔑 Acceso al Panel de Administración
 
 1.  Con el servidor en marcha, abre tu navegador y ve a:
     **[http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)**
 
-2.  Inicia sesión con las credenciales del superusuario que creaste en el paso anterior.
-
-¡Y listo! Desde aquí puedes empezar a añadir administradores y viviendas.
+2.  Inicia sesión con las credenciales del superusuario (`admin`/`1234`).
 
 ---
 
-## 📋 Proceso 1: Flujo del Arrendatario
+## 📋 Flujos de Trabajo y Pruebas
 
-Esta sección describe cómo probar el flujo de solicitud de visitas implementado.
+### Proceso 1: Solicitud de Visita por el Arrendatario
 
-### 1. Prepara los datos en el Panel de Administración
+1.  **Prepara los datos en el Panel de Administración:**
+    *   Crea una o más `Viviendas`.
+    *   Para cada vivienda, añade tu número de teléfono en la sección "Arrendatarios Autorizados" (con prefijo internacional, ej: `+34...`).
+    *   Añade `Horarios de Visita` con fechas futuras para las viviendas.
 
-1.  **Accede al panel de administración:**
-    [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
+2.  **Prueba el Flujo como Arrendatario:**
+    *   Ve a [http://127.0.0.1:8000/acceso-arrendatario/](http://127.0.0.1:8000/acceso-arrendatario/).
+    *   Introduce tu teléfono.
+    *   **Si tienes acceso a más de una vivienda**, serás redirigido a una página para seleccionar a cuál quieres pedir cita. Verás un botón "Solicitar Visita" para las disponibles y "Gestionar Visita" para las que ya tengas una cita confirmada.
+    *   **Si ya tienes una cita**, puedes gestionarla (modificarla o cancelarla). Al modificar, el formulario se precargará con tus datos.
+    *   Rellena el formulario de visita. El sistema solo mostrará los horarios realmente libres.
+    *   Tras confirmar, recibirás un email (en la consola) con un resumen completo de tus datos y un botón para gestionar tu visita.
 
-2.  **Crea una `Vivienda`:**
-    *   Ve a la sección "Viviendas" y añade una nueva. Rellena los datos que desees.
+### Proceso 2: Solicitud de Documentación al Candidato
 
-3.  **Añade tu número de teléfono a la vivienda:**
-    *   Dentro de la vivienda que acabas de crear, busca la sección "Arrendatarios Autorizados".
-    *   Añade tu número de teléfono **con prefijo internacional** (ej. `+34666666666`).
+1.  **Selecciona al Candidato desde el Panel de Administración:**
+    *   Asegúrate de que tienes al menos una visita creada siguiendo el Proceso 1.
+    *   Ve a la sección "Visitas" en el panel de administración.
+    *   Selecciona la casilla de la visita del candidato que quieres elegir.
+    *   En el menú de "Acciones" en la parte superior, selecciona **"Enviar enlace para subir documentación"** y haz clic en "Ir".
 
-4.  **Define los horarios de visita:**
-    *   En la misma página de la vivienda, busca la sección "Horarios".
-    *   Añade una o más franjas horarias con una **fecha futura** y horas de inicio y fin.
+2.  **El Arrendatario Recibe el Email:**
+    *   El sistema enviará un email (visible en la consola) al arrendatario con un enlace único y seguro para subir su documentación.
 
-### 2. Prueba el Flujo como Arrendatario
+3.  **Prueba la Subida de Documentos:**
+    *   Copia y pega el enlace del email en tu navegador.
+    *   Llegarás a una página que te pedirá subir los documentos necesarios (DNI, nóminas, etc.).
+    *   Puedes usar el botón **"Añadir otro inquilino"** para añadir más formularios dinámicamente.
+    *   Al enviar, los ficheros se guardarán y la solicitud se marcará como "Completada".
 
-1.  **Accede a la página de verificación:**
-    Abre una nueva pestaña (preferiblemente en modo incógnito para tener una sesión limpia) y ve a:
-    [http://127.0.0.1:8000/acceso-arrendatario/](http://127.0.0.1:8000/acceso-arrendatario/)
-
-2.  **Introduce tu teléfono:**
-    Escribe el mismo número de teléfono que autorizaste en el paso anterior.
-
-    *   **Nota:** Si ya has agendado una visita con este teléfono y está "Confirmada", el sistema lo detectará y te llevará a una página para **gestionar tu visita existente**. Desde aquí puedes cancelarla o modificarla.
-    *   Si eliges **Modificar Visita**, serás redirigido al formulario de reserva, pero esta vez **todos tus datos anteriores estarán precargados** para tu comodidad.
-
-3.  **Rellena el formulario de visita:**
-    *   Si el teléfono es correcto, serás redirigido al formulario para agendar la visita.
-    *   El desplegable "Selecciona un horario de visita" debería mostrarte los huecos disponibles calculados a partir de las franjas que definiste.
-    *   Rellena el resto de campos y haz clic en "Confirmar Visita".
-
-4.  **Confirma y Cancela (Opcional):**
-    *   Serás redirigido a una página de confirmación.
-    *   En la consola donde ejecutaste `runserver`, verás un mensaje simulando el email de confirmación, que incluye un **enlace de cancelación**.
-    *   Copia y pega ese enlace en tu navegador para probar el flujo de cancelación.
-
-### 3. Verifica los resultados en el Panel de Administración
-
-*   Vuelve al panel de administración y ve a la sección "Visitas".
-*   Verás la nueva visita que has creado, con su estado ("CONFIRMADA" o "CANCELADA").
+4.  **Verifica en el Panel de Administración:**
+    *   Ve a la sección "Solicitudes de Documentación". Verás la nueva solicitud con el estado "Completada".
 
 ---
 
 ## ⚙️ Configuración del Envío de Correos (Opcional)
 
-Por defecto, la aplicación está configurada para mostrar los correos electrónicos en la consola donde ejecutas `runserver`. Esto es ideal para el desarrollo.
-
-Si quieres que la aplicación envíe correos reales a través de un servidor SMTP (como Gmail), sigue estos pasos:
+Por defecto, los correos se muestran en la consola. Para enviar correos reales (ej. con Gmail):
 
 1.  **Modifica `gestion_viviendas/settings.py`:**
-    *   **Comenta** la línea `EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'`.
-    *   **Descomenta** las líneas de configuración de `EMAIL_BACKEND` para SMTP.
+    *   Comenta la línea de `EMAIL_BACKEND` para la consola.
+    *   Descomenta las líneas de configuración para SMTP.
 
-2.  **Configura las Variables de Entorno:**
-    Necesitarás crear un fichero `.env` en la raíz del proyecto para almacenar tus credenciales de forma segura.
-
-    *   **Crea el fichero `.env`:**
-        ```
-        touch .env
-        ```
-
-    *   **Añade las siguientes variables a tu fichero `.env`** (reemplaza los valores con los tuyos):
-        ```
-        # Ejemplo para Gmail
-        EMAIL_HOST=smtp.gmail.com
-        EMAIL_PORT=587
-        EMAIL_USE_TLS=True
-        EMAIL_HOST_USER=tu-correo@gmail.com
-        EMAIL_HOST_PASSWORD=tu-contraseña-de-aplicacion
-        ```
-        **Importante para Gmail:** No uses tu contraseña normal. Debes generar una "Contraseña de aplicación" desde la configuración de seguridad de tu cuenta de Google.
-
-3.  **Instala `python-dotenv`:**
-    Para que Django pueda leer el fichero `.env`, necesitas instalar una librería adicional:
-    ```bash
-    pip install python-dotenv
+2.  **Crea un fichero `.env`** en la raíz del proyecto con tus credenciales:
     ```
-
-4.  **Modifica `manage.py` y `gestion_viviendas/wsgi.py`:**
-    Añade las siguientes líneas al principio de ambos ficheros para que carguen las variables de entorno al iniciar la aplicación:
-    ```python
-    from dotenv import load_dotenv
-    load_dotenv()
+    EMAIL_HOST=smtp.gmail.com
+    EMAIL_PORT=587
+    EMAIL_USE_TLS=True
+    EMAIL_HOST_USER=tu-correo@gmail.com
+    EMAIL_HOST_PASSWORD=tu-contraseña-de-aplicacion
     ```
+    **Importante:** Para Gmail, necesitas una "Contraseña de aplicación".
 
-¡Y listo! La próxima vez que inicies el servidor, la aplicación intentará enviar correos usando las credenciales que has configurado.
+3.  El fichero `autoRun.sh` ya instala `python-dotenv` y los ficheros de Django están configurados para leer `.env`, así que no necesitas hacer nada más.
