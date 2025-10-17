@@ -1,5 +1,4 @@
-from django.db import models
-
+import uuid
 from django.db import models
 
 class Administrador(models.Model):
@@ -72,3 +71,51 @@ class ArrendatarioAutorizado(models.Model):
 
     def __str__(self):
         return f"{self.telefono} autorizado para {self.vivienda.nombre}"
+
+class Visita(models.Model):
+    """
+    Almacena la información de una solicitud de visita de un arrendatario.
+    """
+    ESTADO_CHOICES = [
+        ("CONFIRMADA", "Confirmada"),
+        ("CANCELADA", "Cancelada"),
+        ("REALIZADA", "Realizada"),
+    ]
+
+    # Relaciones
+    vivienda = models.ForeignKey(Vivienda, on_delete=models.CASCADE, related_name="visitas")
+
+    # Datos del solicitante
+    nombre = models.CharField(max_length=100)
+    apellidos = models.CharField(max_length=200)
+    email = models.EmailField()
+    telefono = models.CharField(max_length=20)
+
+    # Información para el seguro
+    sueldo_mensual = models.DecimalField(max_digits=10, decimal_places=2, help_text="Sueldo mensual bruto en euros")
+    numero_inquilinos = models.PositiveIntegerField(default=1)
+    numero_menores = models.PositiveIntegerField(default=0)
+    mascota = models.BooleanField(default=False, help_text="¿Tiene mascotas?")
+    puesto_trabajo = models.TextField(help_text="Describa los puestos de trabajo de los inquilinos adultos")
+    fumador = models.BooleanField(default=False, help_text="¿Es fumador?")
+    observaciones = models.TextField(blank=True, null=True)
+
+    # Datos de la cita
+    fecha_hora = models.DateTimeField()
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default="CONFIRMADA")
+
+    # Metadatos
+    cancelacion_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    veces_cancelada = models.PositiveIntegerField(default=0)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        # Evita que se agende más de una visita para la misma vivienda a la misma hora.
+        unique_together = ('vivienda', 'fecha_hora')
+        ordering = ['fecha_hora']
+        verbose_name = "Visita"
+        verbose_name_plural = "Visitas"
+
+    def __str__(self):
+        return f"Visita de {self.nombre} {self.apellidos} para {self.vivienda.nombre} el {self.fecha_hora.strftime('%d/%m/%Y a las %H:%M')}"
