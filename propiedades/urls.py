@@ -4,9 +4,6 @@ from . import views
 app_name = 'propiedades'
 
 urlpatterns = [
-    # Ejemplo: /viviendas/1/solicitar-acceso/
-    path('viviendas/<int:vivienda_id>/solicitar-acceso/', views.solicitar_acceso_view, name='solicitar_acceso'),
-
     # Ejemplo: /solicitar-visita/ (Página para introducir el teléfono)
     # Por ahora, vamos a crear una URL genérica para el acceso.
     # La lógica de a qué vivienda pertenece el teléfono se hará en la vista.
@@ -27,6 +24,6 @@ urlpatterns = [
     # Página para que el usuario elija a qué vivienda quiere solicitar visita
     path('seleccionar-vivienda/', views.seleccionar_vivienda_view, name='seleccionar_vivienda'),
 
-    # Página para que el candidato suba los documentos para el seguro
-    path('solicitud-seguro/<uuid:token>/', views.subir_documentos_seguro_view, name='subir_documentos_seguro'),
+    # Página para que el candidato suba los documentos
+    path('solicitud-documentacion/<uuid:token>/', views.subir_documentos_view, name='subir_documentos'),
 ]

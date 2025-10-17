@@ -26,7 +26,8 @@
         <div class="header-info">
             <h1>Subida de Documentación</h1>
             <h2>Vivienda: {{ solicitud.visita.vivienda.nombre }}</h2>
-            <p>Hola, {{ solicitud.visita.nombre }}. Por favor, completa la siguiente información para todos los inquilinos que vayan a firmar el contrato. Al subir estos documentos, aceptas que sean compartidos con la aseguradora de la vivienda para su verificación.</p>
+            <p>Hola, {{ solicitud.visita.nombre }}. Por favor, completa la siguiente información para todos los inquilinos que vayan a firmar el contrato.</p>
+            <p><strong>Importante:</strong> Al hacer clic en "Enviar Documentación", aceptas explícitamente que todos los datos y ficheros subidos sean compartidos con la aseguradora de la vivienda (<strong>{{ solicitud.visita.vivienda.nombre_aseguradora_impagos|default:"la aseguradora designada" }}</strong>) con el único fin de verificar que cumples con las condiciones del seguro de impago.</p>
         </div>
 
         <form method="post" enctype="multipart/form-data">
@@ -42,8 +43,45 @@
                 {% endfor %}
             </div>
 
+            <button type="button" id="add-form-btn" class="add-row">Añadir otro inquilino</button>
             <button type="submit">Enviar Documentación</button>
         </form>
+
+        <div id="empty-form-template" style="display: none;">
+            <div class="form-section">
+                <h3>Inquilino __prefix__</h3>
+                {{ formset.empty_form.as_p }}
+            </div>
+        </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const addFormBtn = document.getElementById('add-form-btn');
+            const formsetContainer = document.getElementById('formset-container');
+            const emptyFormTemplate = document.getElementById('empty-form-template').innerHTML;
+            const totalFormsInput = document.getElementById('id_form-TOTAL_FORMS');
+
+            addFormBtn.addEventListener('click', function() {
+                let formCount = parseInt(totalFormsInput.value);
+
+                let newFormHtml = emptyFormTemplate.replace(/__prefix__/g, formCount);
+
+                // Creamos un div temporal para poder manipular el DOM del nuevo formulario
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = newFormHtml;
+
+                // Actualizamos el encabezado
+                const newHeader = tempDiv.querySelector('h3');
+                if (newHeader) {
+                    newHeader.textContent = `Inquilino ${formCount + 1}`;
+                }
+
+                formsetContainer.appendChild(tempDiv.firstElementChild);
+
+                totalFormsInput.value = formCount + 1;
+            });
+        });
+    </script>
 </body>
 </html>

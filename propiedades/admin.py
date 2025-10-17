@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Administrador, Vivienda, HorarioVisita, ArrendatarioAutorizado, Visita, SolicitudSeguro
+from .models import Administrador, Vivienda, HorarioVisita, ArrendatarioAutorizado, Visita, SolicitudDocumentacion
 
 class HorarioVisitaInline(admin.TabularInline):
     """
@@ -111,41 +111,41 @@ class VisitaAdmin(admin.ModelAdmin):
     def cancelar_por_otro_motivo(self, request, queryset):
         self._cancelar_visitas(request, queryset, "La visita ha sido cancelada por el administrador por otros motivos.")
 
-    @admin.action(description="Iniciar proceso de seguro para el candidato")
-    def iniciar_proceso_seguro(self, request, queryset):
+    @admin.action(description="Enviar enlace para subir documentación")
+    def enviar_enlace_documentacion(self, request, queryset):
         if queryset.count() > 1:
-            self.message_user(request, "Por favor, selecciona solo un candidato a la vez para iniciar el proceso.", level='error')
+            self.message_user(request, "Por favor, selecciona solo un candidato a la vez.", level='error')
             return
 
         visita = queryset.first()
-        if hasattr(visita, 'solicitud_seguro'):
-            self.message_user(request, f"El candidato {visita.nombre} ya tiene una solicitud de seguro en proceso.", level='warning')
+        if hasattr(visita, 'solicitud_documentacion'):
+            self.message_user(request, f"El candidato {visita.nombre} ya tiene una solicitud de documentación en proceso.", level='warning')
             return
 
-        solicitud = SolicitudSeguro.objects.create(visita=visita)
+        solicitud = SolicitudDocumentacion.objects.create(visita=visita)
 
         # Enviar email al candidato
         asunto = f"Siguientes pasos para el alquiler de {visita.vivienda.nombre}"
         enlace_subida = request.build_absolute_uri(
-            reverse('propiedades:subir_documentos_seguro', args=[solicitud.token_acceso])
+            reverse('propiedades:subir_documentos', args=[solicitud.token_acceso])
         )
-        contexto_email = {'visita': visita, 'enlace_subida': enlace_subida}
+        contexto_email = {'visita': visita, 'enlace_subida': enlace_subida, 'aseguradora': visita.vivienda.nombre_aseguradora_impagos}
 
-        cuerpo_mensaje = render_to_string('propiedades/emails/instrucciones_seguro.txt', contexto_email)
-        html_cuerpo_mensaje = render_to_string('propiedades/emails/instrucciones_seguro.html', contexto_email)
+        cuerpo_mensaje = render_to_string('propiedades/emails/instrucciones_documentacion.txt', contexto_email)
+        html_cuerpo_mensaje = render_to_string('propiedades/emails/instrucciones_documentacion.html', contexto_email)
 
         try:
             msg = EmailMultiAlternatives(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, [visita.email])
             msg.attach_alternative(html_cuerpo_mensaje, "text/html")
             msg.send()
             self.message_user(request, f"Se ha enviado un correo con instrucciones a {visita.nombre}.")
-            print(f"Correo de inicio de proceso de seguro enviado a {visita.email}.")
+            print(f"Correo de solicitud de documentación enviado a {visita.email}.")
         except Exception as e:
             self.message_user(request, f"No se pudo enviar el correo a {visita.nombre}. Error: {e}", level='error')
-            print(f"ERROR al enviar correo de inicio de proceso de seguro: {e}")
+            print(f"ERROR al enviar correo de solicitud de documentación: {e}")
 
-@admin.register(SolicitudSeguro)
-class SolicitudSeguroAdmin(admin.ModelAdmin):
+@admin.register(SolicitudDocumentacion)
+class SolicitudDocumentacionAdmin(admin.ModelAdmin):
     list_display = ('visita', 'estado', 'fecha_creacion')
     list_filter = ('estado', 'fecha_creacion')
     readonly_fields = ('token_acceso',)
