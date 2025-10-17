@@ -114,6 +114,8 @@ Esta sección describe cómo probar el flujo de solicitud de visitas implementad
 2.  **Introduce tu teléfono:**
     Escribe el mismo número de teléfono que autorizaste en el paso anterior.
 
+    *   **Nota:** Si ya has agendado una visita con este teléfono y está "Confirmada", el sistema lo detectará y te llevará a una página para **gestionar tu visita existente**, en lugar de permitirte reservar una nueva.
+
 3.  **Rellena el formulario de visita:**
     *   Si el teléfono es correcto, serás redirigido al formulario para agendar la visita.
     *   El desplegable "Selecciona un horario de visita" debería mostrarte los huecos disponibles calculados a partir de las franjas que definiste.
