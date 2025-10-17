@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     # Mis aplicaciones
-    'propiedades',
+    'propiedades.apps.PropiedadesConfig',
 ]
 
 MIDDLEWARE = [
