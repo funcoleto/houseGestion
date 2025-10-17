@@ -18,15 +18,15 @@ Aplicación web para la gestión integral de propiedades de alquiler. Este proye
 
 ## 🚀 Cómo Empezar
 
-Sigue estos pasos para poner en marcha el proyecto en tu entorno local.
-
 ### 1. Prerrequisitos
 
 Asegúrate de tener instalados los siguientes programas:
 *   [Python 3.10+](https://www.python.org/downloads/)
-*   `pip` (generalmente viene con Python)
+*   `git`
 
-### 2. Instalación y Configuración
+### 2. Instalación y Ejecución Automática
+
+Hemos creado un script que automatiza todo el proceso de instalación y ejecución.
 
 1.  **Clona el repositorio:**
     ```bash
@@ -34,43 +34,19 @@ Asegúrate de tener instalados los siguientes programas:
     cd gestion-de-viviendas
     ```
 
-2.  **Crea y activa un entorno virtual (recomendado):**
+2.  **Ejecuta el script de instalación:**
     ```bash
-    # Para Unix/macOS
-    python3 -m venv venv
-    source venv/bin/activate
-
-    # Para Windows
-    python -m venv venv
-    .\venv\Scripts\activate
+    ./autoRun.sh
     ```
 
-3.  **Instala las dependencias:**
-    Por ahora, solo necesitas Django. Puedes instalarlo con el siguiente comando (más adelante crearemos un fichero `requirements.txt`):
-    ```bash
-    pip install django
-    ```
+El script se encargará de:
+*   Crear un entorno virtual.
+*   Instalar todas las dependencias.
+*   Configurar la base de datos.
+*   Crear un superusuario por defecto (`usuario: admin`, `contraseña: admin`).
+*   Iniciar el servidor de desarrollo.
 
-4.  **Aplica las migraciones de la base de datos:**
-    Este comando creará el fichero de base de datos `db.sqlite3` y las tablas necesarias.
-    ```bash
-    python manage.py migrate
-    ```
-
-5.  **Crea un superusuario:**
-    Para acceder al panel de administración, necesitas un usuario con privilegios.
-    ```bash
-    python manage.py createsuperuser
-    ```
-    Sigue las instrucciones para crear tu nombre de usuario, email y contraseña.
-
-### 3. Ejecutar el Servidor de Desarrollo
-
-Una vez completada la configuración, inicia el servidor de desarrollo de Django:
-```bash
-python manage.py runserver
-```
-La aplicación estará disponible en `http://127.0.0.1:8000/`.
+Una vez que el script termine, la aplicación estará disponible en `http://127.0.0.1:8000/`.
 
 ---
 
