@@ -62,7 +62,7 @@ class VisitaAdmin(admin.ModelAdmin):
     list_filter = ('estado', 'vivienda', 'fecha_hora')
     search_fields = ('nombre', 'apellidos', 'email', 'telefono', 'vivienda__nombre')
     list_per_page = 25
-    actions = ['cancelar_por_alquiler', 'cancelar_por_otro_motivo']
+    actions = ['cancelar_por_alquiler', 'cancelar_por_otro_motivo', 'crear_solicitud_documentacion']
 
     # Hacemos que los campos de solo lectura se muestren en el panel de detalle.
     readonly_fields = ('cancelacion_token', 'creado_en', 'actualizado_en', 'motivo_cancelacion')
@@ -111,70 +111,24 @@ class VisitaAdmin(admin.ModelAdmin):
     def cancelar_por_otro_motivo(self, request, queryset):
         self._cancelar_visitas(request, queryset, "La visita ha sido cancelada por el administrador por otros motivos.")
 
-    @admin.action(description="Enviar enlace para subir documentación")
-    def enviar_enlace_documentacion(self, request, queryset):
-        if queryset.count() > 1:
-            self.message_user(request, "Por favor, selecciona solo un candidato a la vez.", level='error')
-            return
+    @admin.action(description="Crear solicitud de documentación")
+    def crear_solicitud_documentacion(self, request, queryset):
+        creadas_count = 0
+        for visita in queryset:
+            if not hasattr(visita, 'solicitud_de_documentacion'):
+                SolicitudDeDocumentacion.objects.create(visita=visita)
+                creadas_count += 1
 
-        visita = queryset.first()
-        if hasattr(visita, 'solicitud_de_documentacion'):
-            self.message_user(request, f"El candidato {visita.nombre} ya tiene una solicitud de documentación en proceso.", level='warning')
-            return
-
-        solicitud = SolicitudDeDocumentacion.objects.create(visita=visita)
-
-        # Enviar email al candidato
-        asunto = f"Siguientes pasos para el alquiler de {visita.vivienda.nombre}"
-        enlace_subida = request.build_absolute_uri(
-            reverse('propiedades:subir_documentos', args=[solicitud.token_acceso])
-        )
-        contexto_email = {'visita': visita, 'enlace_subida': enlace_subida, 'aseguradora': visita.vivienda.nombre_aseguradora_impagos}
-
-        cuerpo_mensaje = render_to_string('propiedades/emails/instrucciones_documentacion.txt', contexto_email)
-        html_cuerpo_mensaje = render_to_string('propiedades/emails/instrucciones_documentacion.html', contexto_email)
-
-        try:
-            msg = EmailMultiAlternatives(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, [visita.email])
-            msg.attach_alternative(html_cuerpo_mensaje, "text/html")
-            msg.send()
-            self.message_user(request, f"Se ha enviado un correo con instrucciones a {visita.nombre}.")
-            print(f"Correo de solicitud de documentación enviado a {visita.email}.")
-        except Exception as e:
-            self.message_user(request, f"No se pudo enviar el correo a {visita.nombre}. Error: {e}", level='error')
-            print(f"ERROR al enviar correo de solicitud de documentación: {e}")
+        if creadas_count > 0:
+            self.message_user(request, f"Se han creado y enviado {creadas_count} solicitudes de documentación.")
+        else:
+            self.message_user(request, "No se creó ninguna solicitud nueva (puede que ya existieran).", level='warning')
 
 @admin.register(SolicitudDeDocumentacion)
 class SolicitudDeDocumentacionAdmin(admin.ModelAdmin):
+    """
+    Personalización del panel de administración para SolicitudDeDocumentacion.
+    """
     list_display = ('visita', 'estado', 'fecha_creacion')
     list_filter = ('estado', 'fecha_creacion')
     readonly_fields = ('token_acceso',)
-    actions = ['reenviar_enlace_documentacion']
-
-    @admin.action(description="Reenviar email con enlace para subir documentación")
-    def reenviar_enlace_documentacion(self, request, queryset):
-        reenviados_count = 0
-        for solicitud in queryset:
-            if solicitud.estado == 'PENDIENTE':
-                visita = solicitud.visita
-                asunto = f"Recordatorio: Siguientes pasos para el alquiler de {visita.vivienda.nombre}"
-                enlace_subida = request.build_absolute_uri(
-                    reverse('propiedades:subir_documentos', args=[solicitud.token_acceso])
-                )
-                contexto_email = {'visita': visita, 'enlace_subida': enlace_subida, 'aseguradora': visita.vivienda.nombre_aseguradora_impagos}
-
-                cuerpo_mensaje = render_to_string('propiedades/emails/instrucciones_documentacion.txt', contexto_email)
-                html_cuerpo_mensaje = render_to_string('propiedades/emails/instrucciones_documentacion.html', contexto_email)
-
-                try:
-                    msg = EmailMultiAlternatives(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, [visita.email])
-                    msg.attach_alternative(html_cuerpo_mensaje, "text/html")
-                    msg.send()
-                    reenviados_count += 1
-                except Exception as e:
-                    print(f"ERROR al reenviar correo de solicitud de documentación: {e}")
-
-        if reenviados_count > 0:
-            self.message_user(request, f"Se han reenviado {reenviados_count} correos con éxito.")
-        else:
-            self.message_user(request, "No se reenvió ningún correo (solo se reenvían solicitudes pendientes).", level='warning')

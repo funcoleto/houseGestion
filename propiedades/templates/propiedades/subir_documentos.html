@@ -38,16 +38,55 @@
             {{ formset.management_form }}
 
             <div id="formset-container">
-                {% for form in formset %}
-                    <div class="form-section">
+                {% for form in formset.forms %}
+                    <div class="form-section{% if forloop.counter > 1 and not form.has_changed %} empty-form{% endif %}" id="form-{{ forloop.counter0 }}">
                         <h3>Inquilino {{ forloop.counter }}</h3>
                         {{ form.as_p }}
                     </div>
                 {% endfor %}
             </div>
 
+            <button type="button" class="add-row" id="add-form-btn">Añadir Otro Inquilino</button>
             <button type="submit">Enviar Documentación</button>
         </form>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const formsetContainer = document.getElementById('formset-container');
+            const addFormBtn = document.getElementById('add-form-btn');
+            const totalFormsInput = document.querySelector('input[name="form-TOTAL_FORMS"]');
+            let formCount = parseInt(totalFormsInput.value);
+
+            // Ocultar formularios vacíos excepto el primero
+            function updateVisibleForms() {
+                let visibleForms = 0;
+                for (let i = 0; i < formCount; i++) {
+                    const formSection = document.getElementById(`form-${i}`);
+                    if (formSection && !formSection.classList.contains('empty-form')) {
+                        visibleForms++;
+                    }
+                }
+
+                // Ocultar el botón si todos los formularios están visibles
+                if (visibleForms >= formCount) {
+                    addFormBtn.style.display = 'none';
+                } else {
+                    addFormBtn.style.display = 'block';
+                }
+            }
+
+            addFormBtn.addEventListener('click', function() {
+                const firstEmptyForm = formsetContainer.querySelector('.empty-form');
+                if (firstEmptyForm) {
+                    firstEmptyForm.classList.remove('empty-form');
+                    updateVisibleForms();
+                }
+            });
+
+            // Inicializar la visibilidad
+            updateVisibleForms();
+        });
+    </script>
 </body>
 </html>
