@@ -82,3 +82,49 @@ La aplicación estará disponible en `http://127.0.0.1:8000/`.
 2.  Inicia sesión con las credenciales del superusuario que creaste en el paso anterior.
 
 ¡Y listo! Desde aquí puedes empezar a añadir administradores y viviendas.
+
+---
+
+## 📋 Proceso 1: Flujo del Arrendatario
+
+Esta sección describe cómo probar el flujo de solicitud de visitas implementado.
+
+### 1. Prepara los datos en el Panel de Administración
+
+1.  **Accede al panel de administración:**
+    [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
+
+2.  **Crea una `Vivienda`:**
+    *   Ve a la sección "Viviendas" y añade una nueva. Rellena los datos que desees.
+
+3.  **Añade tu número de teléfono a la vivienda:**
+    *   Dentro de la vivienda que acabas de crear, busca la sección "Arrendatarios Autorizados".
+    *   Añade tu número de teléfono **con prefijo internacional** (ej. `+34666666666`).
+
+4.  **Define los horarios de visita:**
+    *   En la misma página de la vivienda, busca la sección "Horarios".
+    *   Añade una o más franjas horarias con una **fecha futura** y horas de inicio y fin.
+
+### 2. Prueba el Flujo como Arrendatario
+
+1.  **Accede a la página de verificación:**
+    Abre una nueva pestaña (preferiblemente en modo incógnito para tener una sesión limpia) y ve a:
+    [http://127.0.0.1:8000/acceso-arrendatario/](http://127.0.0.1:8000/acceso-arrendatario/)
+
+2.  **Introduce tu teléfono:**
+    Escribe el mismo número de teléfono que autorizaste en el paso anterior.
+
+3.  **Rellena el formulario de visita:**
+    *   Si el teléfono es correcto, serás redirigido al formulario para agendar la visita.
+    *   El desplegable "Selecciona un horario de visita" debería mostrarte los huecos disponibles calculados a partir de las franjas que definiste.
+    *   Rellena el resto de campos y haz clic en "Confirmar Visita".
+
+4.  **Confirma y Cancela (Opcional):**
+    *   Serás redirigido a una página de confirmación.
+    *   En la consola donde ejecutaste `runserver`, verás un mensaje simulando el email de confirmación, que incluye un **enlace de cancelación**.
+    *   Copia y pega ese enlace en tu navegador para probar el flujo de cancelación.
+
+### 3. Verifica los resultados en el Panel de Administración
+
+*   Vuelve al panel de administración y ve a la sección "Visitas".
+*   Verás la nueva visita que has creado, con su estado ("CONFIRMADA" o "CANCELADA").

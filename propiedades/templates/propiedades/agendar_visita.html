@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendar Visita para {{ vivienda.nombre }} - Gestión de Viviendas</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 40px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .vivienda-info {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .vivienda-info p { margin: 4px 0; }
+        .vivienda-info strong { color: #34495e; }
+
+        form { display: flex; flex-direction: column; }
+        form p {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 16px;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        input[type="text"], input[type="email"], input[type="number"], select, textarea {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        textarea {
+            resize: vertical;
+        }
+        button {
+            background-color: #27ae60;
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 16px;
+        }
+        button:hover {
+            background-color: #229954;
+        }
+        .errorlist {
+            list-style-type: none;
+            padding: 0;
+            color: #e74c3c;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="vivienda-info">
+            <h1>Solicitud de Visita</h1>
+            <h2>{{ vivienda.nombre }}</h2>
+            <p><strong>Dirección:</strong> {{ vivienda.direccion_completa }}</p>
+            <p><strong>Precio:</strong> {{ vivienda.precio_mensualidad }} €/mes</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Confirmar Visita</button>
+        </form>
+    </div>
+</body>
+</html>

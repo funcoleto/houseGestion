@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Administrador, Vivienda, HorarioVisita, ArrendatarioAutorizado
+from .models import Administrador, Vivienda, HorarioVisita, ArrendatarioAutorizado, Visita
 
 class HorarioVisitaInline(admin.TabularInline):
     """
@@ -48,3 +48,16 @@ class ArrendatarioAutorizadoAdmin(admin.ModelAdmin):
     list_display = ('vivienda', 'telefono')
     list_filter = ('vivienda',)
     search_fields = ('telefono',)
+
+@admin.register(Visita)
+class VisitaAdmin(admin.ModelAdmin):
+    """
+    Personalización del panel de administración para el modelo Visita.
+    """
+    list_display = ('vivienda', 'nombre', 'apellidos', 'fecha_hora', 'estado', 'veces_cancelada')
+    list_filter = ('estado', 'vivienda', 'fecha_hora')
+    search_fields = ('nombre', 'apellidos', 'email', 'telefono', 'vivienda__nombre')
+    list_per_page = 25
+
+    # Hacemos que los campos de solo lectura se muestren en el panel de detalle.
+    readonly_fields = ('cancelacion_token', 'creado_en', 'actualizado_en')

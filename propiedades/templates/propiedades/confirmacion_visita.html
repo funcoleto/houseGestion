@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visita Confirmada - Gestión de Viviendas</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        .icon {
+            font-size: 48px;
+            color: #27ae60;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 16px;
+        }
+        p {
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .details {
+            margin-top: 24px;
+            text-align: left;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        strong {
+            color: #34495e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">✓</div>
+        <h1>¡Visita Confirmada!</h1>
+        <p>Gracias, {{ visita.nombre }}. Hemos agendado tu visita con éxito.</p>
+        <p>Hemos enviado un correo de confirmación a <strong>{{ visita.email }}</strong> con los detalles y un enlace para cancelarla si lo necesitas.</p>
+
+        <div class="details">
+            <p><strong>Vivienda:</strong> {{ visita.vivienda.nombre }}</p>
+            <p><strong>Fecha y Hora:</strong> {{ visita.fecha_hora|date:"d \d\e F \d\e Y \a \l\a\s H:i" }}</p>
+        </div>
+    </div>
+</body>
+</html>
