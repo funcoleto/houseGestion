@@ -35,6 +35,10 @@
                                 <tr><td><strong>Menores a cargo:</strong></td><td>{{ visita.numero_menores }}</td></tr>
                                 <tr><td><strong>Mascotas:</strong></td><td>{% if visita.mascota %}Sí{% else %}No{% endif %}</td></tr>
                                 <tr><td><strong>Fumadores:</strong></td><td>{% if visita.fumador %}Sí{% else %}No{% endif %}</td></tr>
+                                <tr><td valign="top"><strong>Puesto de trabajo:</strong></td><td>{{ visita.puesto_trabajo }}</td></tr>
+                                {% if visita.observaciones %}
+                                    <tr><td valign="top"><strong>Observaciones:</strong></td><td>{{ visita.observaciones }}</td></tr>
+                                {% endif %}
                             </table>
                             <p style="margin-top: 30px;">Si necesitas cambiar o cancelar tu cita, puedes hacerlo desde el siguiente botón:</p>
                             <!-- Button -->

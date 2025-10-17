@@ -24,14 +24,21 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "--- [Paso 4/5] Creando superusuario por defecto (admin/admin)... ---"
-# Creamos el superusuario de forma no interactiva y establecemos su contraseña.
-# Esto evita que el script se detenga a pedir datos.
-python manage.py createsuperuser --username admin --email admin@example.com --noinput
-python -c "from django.contrib.auth import get_user_model; User = get_user_model(); u = User.objects.get(username='admin'); u.set_password('admin'); u.save()"
+echo "--- [Paso 4/5] Creando superusuario por defecto (admin/1234)... ---"
+# Definimos las variables de entorno para la creación no interactiva del superusuario.
+export DJANGO_SUPERUSER_USERNAME=admin
+export DJANGO_SUPERUSER_EMAIL=prueba@prueba.com
+export DJANGO_SUPERUSER_PASSWORD=1234
+python manage.py createsuperuser --noinput
 if [ $? -ne 0 ]; then
-    echo "ADVERTENCIA: No se pudo crear o actualizar el superusuario. Puede que ya exista."
+    # Si el usuario ya existe, solo actualizamos su contraseña.
+    echo "El superusuario 'admin' ya existe. Actualizando contraseña..."
+    python -c "from django.contrib.auth import get_user_model; User = get_user_model(); u = User.objects.get(username='admin'); u.set_password('$DJANGO_SUPERUSER_PASSWORD'); u.save()"
 fi
+# Limpiamos las variables de entorno
+unset DJANGO_SUPERUSER_USERNAME
+unset DJANGO_SUPERUSER_EMAIL
+unset DJANGO_SUPERUSER_PASSWORD
 
 echo "--- [Paso 5/5] Iniciando servidor de desarrollo... ---"
 echo "La aplicación estará disponible en: http://127.0.0.1:8000/"
