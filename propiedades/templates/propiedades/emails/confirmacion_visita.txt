@@ -7,7 +7,14 @@ Aquí tienes los detalles:
 - Dirección: {{ vivienda.direccion_completa }}
 - Fecha y Hora: {{ visita.fecha_hora|date:"d \d\e F \d\e Y \a \l\a\s H:i" }}
 
-Si necesitas cancelar tu visita, puedes hacerlo a través del siguiente enlace:
+A continuación, un resumen de los datos que nos has proporcionado:
+- Sueldo mensual: {{ visita.sueldo_mensual }} €
+- Número de inquilinos: {{ visita.numero_inquilinos }}
+- Menores a cargo: {{ visita.numero_menores }}
+- Mascotas: {% if visita.mascota %}Sí{% else %}No{% endif %}
+- Fumadores: {% if visita.fumador %}Sí{% else %}No{% endif %}
+
+Si necesitas cambiar o cancelar tu cita, puedes hacerlo a través del siguiente enlace:
 {{ enlace_cancelacion }}
 
 ¡Gracias por tu interés!

@@ -28,7 +28,15 @@
                                     </td>
                                 </tr>
                             </table>
-                            <p>Si necesitas cambiar o cancelar tu cita, puedes hacerlo desde el siguiente botón:</p>
+                            <h3 style="color: #2c3e50; margin-top: 30px; border-bottom: 1px solid #eeeeee; padding-bottom: 10px;">Resumen de tu Solicitud</h3>
+                            <table width="100%" border="0" cellspacing="0" cellpadding="5">
+                                <tr><td><strong>Sueldo mensual:</strong></td><td>{{ visita.sueldo_mensual }} €</td></tr>
+                                <tr><td><strong>Nº de inquilinos:</strong></td><td>{{ visita.numero_inquilinos }}</td></tr>
+                                <tr><td><strong>Menores a cargo:</strong></td><td>{{ visita.numero_menores }}</td></tr>
+                                <tr><td><strong>Mascotas:</strong></td><td>{% if visita.mascota %}Sí{% else %}No{% endif %}</td></tr>
+                                <tr><td><strong>Fumadores:</strong></td><td>{% if visita.fumador %}Sí{% else %}No{% endif %}</td></tr>
+                            </table>
+                            <p style="margin-top: 30px;">Si necesitas cambiar o cancelar tu cita, puedes hacerlo desde el siguiente botón:</p>
                             <!-- Button -->
                             <table border="0" cellspacing="0" cellpadding="0" width="100%">
                                 <tr>
