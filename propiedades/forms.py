@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import modelformset_factory
-from .models import Visita, ArrendatarioAutorizado, DocumentacionInquilino
+from .models import Visita, ArrendatarioAutorizado, InquilinoDocumentacion
 import re
 
 class AccesoArrendatarioForm(forms.Form):
@@ -52,12 +52,12 @@ class AgendarVisitaForm(forms.ModelForm):
             'observaciones': forms.Textarea(attrs={'rows': 3}),
         }
 
-class DocumentacionInquilinoForm(forms.ModelForm):
+class InquilinoDocumentacionForm(forms.ModelForm):
     """
     Formulario para que un inquilino suba sus datos y documentos.
     """
     class Meta:
-        model = DocumentacionInquilino
+        model = InquilinoDocumentacion
         fields = [
             'nombre_completo', 'dni_nif_nie', 'iban',
             'dni_anverso', 'dni_reverso',
@@ -78,9 +78,9 @@ class DocumentacionInquilinoForm(forms.ModelForm):
         }
 
 # Usamos un formset para permitir la subida de documentos para múltiples inquilinos.
-DocumentacionInquilinoFormSet = modelformset_factory(
-    DocumentacionInquilino,
-    form=DocumentacionInquilinoForm,
-    extra=1, # Empezamos con 1, el resto se añade con JS
+InquilinoDocumentacionFormSet = modelformset_factory(
+    InquilinoDocumentacion,
+    form=InquilinoDocumentacionForm,
+    extra=4,
     can_delete=True
 )
