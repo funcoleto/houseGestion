@@ -93,20 +93,38 @@ def agendar_visita_view(request, vivienda_id):
 
 def _get_horarios_disponibles(vivienda):
     duracion_visita = timedelta(minutes=vivienda.duracion_visita_minutos)
-    horarios_definidos = HorarioVisita.objects.filter(vivienda=vivienda, fecha__gte=timezone.now().date()).order_by('fecha', 'hora_inicio')
-    visitas_confirmadas = Visita.objects.filter(vivienda=vivienda, estado='CONFIRMADA', fecha_hora__gte=timezone.now())
-    fechas_ocupadas = {v.fecha_hora for v in visitas_confirmadas}
+    hoy = timezone.now().date()
+
+    # Horarios definidos por el administrador a partir de hoy.
+    horarios_definidos = HorarioVisita.objects.filter(vivienda=vivienda, fecha__gte=hoy).order_by('fecha', 'hora_inicio')
+
+    # Visitas ya confirmadas para esta vivienda. No es necesario filtrar por tiempo aquí,
+    # ya que la consulta de HorarioVisita ya nos limita a los días relevantes.
+    visitas_confirmadas = Visita.objects.filter(vivienda=vivienda, estado='CONFIRMADA')
+
+    # Para una comparación fiable, convertimos las fechas de las visitas a la zona horaria local
+    # ANTES de pasarlas a formato ISO. Esto asegura que '2025-10-17T10:30:00+02:00' (local)
+    # coincida con lo que se genera en el bucle, en lugar de compararlo con la versión UTC de la BD.
+    zona_horaria_local = timezone.get_current_timezone()
+    fechas_ocupadas_iso = {v.fecha_hora.astimezone(zona_horaria_local).isoformat() for v in visitas_confirmadas}
+
     huecos_disponibles = []
     for horario in horarios_definidos:
+        # Nos aseguramos de que el datetime sea "consciente" de la zona horaria definida en settings.py.
         hora_inicio_aware = timezone.make_aware(datetime.combine(horario.fecha, horario.hora_inicio))
         hora_fin_aware = timezone.make_aware(datetime.combine(horario.fecha, horario.hora_fin))
+
         hora_actual = hora_inicio_aware
         while hora_actual + duracion_visita <= hora_fin_aware:
-            if hora_actual not in fechas_ocupadas:
+            # Comparamos la cadena ISO del hueco actual con el conjunto de cadenas ISO ocupadas.
+            if hora_actual.isoformat() not in fechas_ocupadas_iso:
                 valor = hora_actual.isoformat()
-                texto = hora_actual.strftime('%d de %B de %Y a las %H:%M %Z')
+                # Formateamos el texto para mostrarlo al usuario en un formato amigable.
+                texto = hora_actual.strftime('%d de %B de %Y a las %H:%M')
                 huecos_disponibles.append((valor, texto))
+
             hora_actual += duracion_visita
+
     return huecos_disponibles
 
 def confirmacion_visita_view(request, token):
