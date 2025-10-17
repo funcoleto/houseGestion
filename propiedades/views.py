@@ -4,6 +4,7 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
+from django.utils import timezone
 from datetime import datetime, timedelta
 
 from .forms import AccesoArrendatarioForm, AgendarVisitaForm
@@ -53,20 +54,24 @@ def _get_horarios_disponibles(vivienda):
     """
     duracion_visita = timedelta(minutes=vivienda.duracion_visita_minutos)
     # Solo consideramos horarios futuros.
-    horarios_definidos = HorarioVisita.objects.filter(vivienda=vivienda, fecha__gte=datetime.today().date()).order_by('fecha', 'hora_inicio')
-    visitas_confirmadas = Visita.objects.filter(vivienda=vivienda, estado='CONFIRMADA', fecha_hora__gte=datetime.now())
+    horarios_definidos = HorarioVisita.objects.filter(vivienda=vivienda, fecha__gte=timezone.now().date()).order_by('fecha', 'hora_inicio')
+    visitas_confirmadas = Visita.objects.filter(vivienda=vivienda, estado='CONFIRMADA', fecha_hora__gte=timezone.now())
 
+    # Hacemos que las fechas de las visitas confirmadas sean conscientes de la zona horaria.
     fechas_ocupadas = {v.fecha_hora for v in visitas_confirmadas}
     huecos_disponibles = []
 
     for horario in horarios_definidos:
-        hora_actual = datetime.combine(horario.fecha, horario.hora_inicio)
-        hora_fin_franja = datetime.combine(horario.fecha, horario.hora_fin)
+        # Combinamos fecha y hora y lo hacemos consciente de la zona horaria actual de Django.
+        hora_inicio_aware = timezone.make_aware(datetime.combine(horario.fecha, horario.hora_inicio))
+        hora_fin_aware = timezone.make_aware(datetime.combine(horario.fecha, horario.hora_fin))
 
-        while hora_actual + duracion_visita <= hora_fin_franja:
+        hora_actual = hora_inicio_aware
+
+        while hora_actual + duracion_visita <= hora_fin_aware:
             if hora_actual not in fechas_ocupadas:
                 valor = hora_actual.isoformat()
-                texto = hora_actual.strftime('%d de %B de %Y a las %H:%M')
+                texto = hora_actual.strftime('%d de %B de %Y a las %H:%M %Z')
                 huecos_disponibles.append((valor, texto))
             hora_actual += duracion_visita
 

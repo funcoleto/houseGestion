@@ -107,6 +107,7 @@ class Visita(models.Model):
     # Metadatos
     cancelacion_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     veces_cancelada = models.PositiveIntegerField(default=0)
+    motivo_cancelacion = models.CharField(max_length=255, blank=True, null=True, help_text="Motivo por el que se canceló la visita.")
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 

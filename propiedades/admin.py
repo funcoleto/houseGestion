@@ -62,29 +62,51 @@ class VisitaAdmin(admin.ModelAdmin):
     list_filter = ('estado', 'vivienda', 'fecha_hora')
     search_fields = ('nombre', 'apellidos', 'email', 'telefono', 'vivienda__nombre')
     list_per_page = 25
+    actions = ['cancelar_por_alquiler', 'cancelar_por_otro_motivo']
 
     # Hacemos que los campos de solo lectura se muestren en el panel de detalle.
-    readonly_fields = ('cancelacion_token', 'creado_en', 'actualizado_en')
+    readonly_fields = ('cancelacion_token', 'creado_en', 'actualizado_en', 'motivo_cancelacion')
 
-    def delete_queryset(self, request, queryset):
+    def get_actions(self, request):
         """
-        Sobrescribe la acción de borrado para enviar notificaciones por email.
+        Desactiva la acción de borrado por defecto ('delete_selected').
+        """
+        actions = super().get_actions(request)
+        if 'delete_selected' in actions:
+            del actions['delete_selected']
+        return actions
+
+    def _cancelar_visitas(self, request, queryset, motivo):
+        """
+        Lógica interna para cancelar visitas y enviar notificaciones.
         """
         for visita in queryset:
-            # Solo enviamos email si la visita estaba confirmada
             if visita.estado == 'CONFIRMADA':
+                visita.estado = 'CANCELADA'
+                visita.motivo_cancelacion = motivo
+                visita.veces_cancelada += 1
+                visita.save()
+
+                # Enviar notificación por email
                 asunto = f"Cancelación de tu visita para {visita.vivienda.nombre}"
                 contexto_email = {'visita': visita}
                 cuerpo_mensaje = render_to_string('propiedades/emails/cancelacion_por_admin.txt', contexto_email)
-
                 html_cuerpo_mensaje = render_to_string('propiedades/emails/cancelacion_por_admin.html', contexto_email)
+
                 try:
                     msg = EmailMultiAlternatives(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, [visita.email])
                     msg.attach_alternative(html_cuerpo_mensaje, "text/html")
                     msg.send()
-                    print(f"Notificación de cancelación por admin enviada con éxito a {visita.email}.")
+                    print(f"Notificación de cancelación (motivo: {motivo}) enviada a {visita.email}.")
                 except Exception as e:
-                    print(f"ERROR al enviar notificación de cancelación por admin: {e}")
+                    print(f"ERROR al enviar notificación de cancelación: {e}")
 
-        # Llamamos al método original para que se realice el borrado
-        super().delete_queryset(request, queryset)
+        self.message_user(request, f"{queryset.count()} visitas han sido canceladas exitosamente.")
+
+    @admin.action(description="Cancelar seleccionadas (Vivienda ya alquilada)")
+    def cancelar_por_alquiler(self, request, queryset):
+        self._cancelar_visitas(request, queryset, "La vivienda para la que solicitó la visita ya ha sido alquilada.")
+
+    @admin.action(description="Cancelar seleccionadas (Otro motivo)")
+    def cancelar_por_otro_motivo(self, request, queryset):
+        self._cancelar_visitas(request, queryset, "La visita ha sido cancelada por el administrador por otros motivos.")
