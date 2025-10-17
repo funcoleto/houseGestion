@@ -120,3 +120,49 @@ class Visita(models.Model):
 
     def __str__(self):
         return f"Visita de {self.nombre} {self.apellidos} para {self.vivienda.nombre} el {self.fecha_hora.strftime('%d/%m/%Y a las %H:%M')}"
+
+
+class SolicitudSeguro(models.Model):
+    """
+    Representa una solicitud de documentación a un candidato seleccionado para
+    la verificación del seguro de impago.
+    """
+    ESTADO_SOLICITUD = [
+        ('PENDIENTE', 'Pendiente de envío de documentos'),
+        ('COMPLETADA', 'Documentación recibida'),
+        ('APROBADA', 'Aprobada por aseguradora'),
+        ('RECHAZADA', 'Rechazada por aseguradora'),
+    ]
+
+    visita = models.OneToOneField(Visita, on_delete=models.CASCADE, related_name="solicitud_seguro")
+    estado = models.CharField(max_length=20, choices=ESTADO_SOLICITUD, default='PENDIENTE')
+    token_acceso = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Solicitud para {self.visita.nombre} {self.visita.apellidos} ({self.get_estado_display()})"
+
+
+class DocumentoInquilino(models.Model):
+    """
+    Almacena los datos y documentos de una persona (inquilino) asociados a una
+    solicitud de seguro.
+    """
+    solicitud = models.ForeignKey(SolicitudSeguro, on_delete=models.CASCADE, related_name="documentos_inquilinos")
+
+    # Datos del inquilino
+    nombre_completo = models.CharField(max_length=255)
+    dni_nif_nie = models.CharField(max_length=20)
+
+    # Documentos
+    dni_anverso = models.FileField(upload_to='seguro/dni_anverso/')
+    dni_reverso = models.FileField(upload_to='seguro/dni_reverso/')
+    contrato_trabajo = models.FileField(upload_to='seguro/contrato_trabajo/', blank=True, null=True)
+    ultima_nomina = models.FileField(upload_to='seguro/nominas/', blank=True, null=True)
+    penultima_nomina = models.FileField(upload_to='seguro/nominas/', blank=True, null=True)
+    antepenultima_nomina = models.FileField(upload_to='seguro/nominas/', blank=True, null=True)
+    renta_anual = models.FileField(upload_to='seguro/renta/', blank=True, null=True, help_text="Para autónomos")
+    iban = models.CharField(max_length=34)
+
+    def __str__(self):
+        return f"Documentos de {self.nombre_completo} para solicitud {self.solicitud.id}"

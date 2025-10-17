@@ -1,5 +1,6 @@
 from django import forms
-from .models import Visita, ArrendatarioAutorizado
+from django.forms import modelformset_factory
+from .models import Visita, ArrendatarioAutorizado, DocumentoInquilino
 import re
 
 class AccesoArrendatarioForm(forms.Form):
@@ -50,3 +51,37 @@ class AgendarVisitaForm(forms.ModelForm):
             'puesto_trabajo': forms.Textarea(attrs={'rows': 3}),
             'observaciones': forms.Textarea(attrs={'rows': 3}),
         }
+
+class DocumentoInquilinoForm(forms.ModelForm):
+    """
+    Formulario para que un inquilino suba sus datos y documentos.
+    """
+    class Meta:
+        model = DocumentoInquilino
+        fields = [
+            'nombre_completo', 'dni_nif_nie', 'iban',
+            'dni_anverso', 'dni_reverso',
+            'contrato_trabajo', 'ultima_nomina', 'penultima_nomina', 'antepenultima_nomina',
+            'renta_anual'
+        ]
+        labels = {
+            'nombre_completo': 'Nombre completo',
+            'dni_nif_nie': 'DNI / NIF / NIE',
+            'iban': 'Cuenta IBAN',
+            'dni_anverso': 'DNI / NIE (Cara anverso)',
+            'dni_reverso': 'DNI / NIE (Cara reverso)',
+            'contrato_trabajo': 'Contrato de trabajo',
+            'ultima_nomina': 'Última nómina',
+            'penultima_nomina': 'Penúltima nómina',
+            'antepenultima_nomina': 'Antepenúltima nómina',
+            'renta_anual': 'Última declaración de la renta (solo autónomos)',
+        }
+
+# Usamos un formset para permitir la subida de documentos para múltiples inquilinos.
+# 'extra=4' significa que por defecto se mostrarán 4 formularios vacíos.
+DocumentoInquilinoFormSet = modelformset_factory(
+    DocumentoInquilino,
+    form=DocumentoInquilinoForm,
+    extra=4,
+    can_delete=True # Permite eliminar formularios añadidos
+)

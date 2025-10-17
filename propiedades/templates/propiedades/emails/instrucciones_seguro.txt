@@ -1,0 +1,14 @@
+Hola {{ visita.nombre }},
+
+¡Enhorabuena! Nos complace informarte de que has sido seleccionado como el candidato ideal para la vivienda "{{ visita.vivienda.nombre }}".
+
+El siguiente paso es recopilar la documentación necesaria para la verificación del seguro de impago. Al continuar, aceptas que esta documentación sea compartida con la aseguradora de la vivienda.
+
+Por favor, accede al siguiente enlace seguro para subir los documentos:
+{{ enlace_subida }}
+
+Este enlace es único y solo para ti. No lo compartas.
+
+¡Gracias!
+
+El equipo de Gestión de Viviendas

@@ -30,33 +30,48 @@
             margin-bottom: 24px;
         }
         .vivienda-list {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
+            margin-top: 30px;
         }
         .vivienda-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             background-color: #f9f9f9;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
             margin-bottom: 16px;
-            transition: box-shadow 0.3s;
-        }
-        .vivienda-item:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .vivienda-item a {
-            display: block;
             padding: 20px;
-            text-decoration: none;
-            color: #34495e;
+            text-align: left;
         }
-        .vivienda-item h2 {
+        .info h2 {
             margin: 0 0 8px 0;
-            color: #3498db;
+            color: #2c3e50;
         }
-        .vivienda-item p {
+        .info p {
             margin: 0;
             font-size: 14px;
+            color: #7f8c8d;
+        }
+        .actions .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .btn-solicitar {
+            background-color: #27ae60;
+        }
+        .btn-solicitar:hover {
+            background-color: #229954;
+        }
+        .btn-gestionar {
+            background-color: #3498db;
+        }
+        .btn-gestionar:hover {
+            background-color: #2980b9;
         }
     </style>
 </head>
@@ -65,18 +80,25 @@
         <h1>Selecciona una Vivienda</h1>
         <p>Tu número de teléfono está autorizado para solicitar una visita a las siguientes propiedades. Por favor, elige una:</p>
 
-        <ul class="vivienda-list">
-            {% for vivienda in viviendas %}
-                <li class="vivienda-item">
-                    <a href="{% url 'propiedades:agendar_visita' vivienda.id %}">
-                        <h2>{{ vivienda.nombre }}</h2>
-                        <p>{{ vivienda.direccion_completa }}</p>
-                    </a>
-                </li>
+        <div class="vivienda-list">
+            {% for item in viviendas_con_estado %}
+                <div class="vivienda-item">
+                    <div class="info">
+                        <h2>{{ item.vivienda.nombre }}</h2>
+                        <p>{{ item.vivienda.direccion_completa }}</p>
+                    </div>
+                    <div class="actions">
+                        {% if item.visita_token %}
+                            <a href="{% url 'propiedades:gestionar_visita' item.visita_token %}" class="btn btn-gestionar">Gestionar Visita</a>
+                        {% else %}
+                            <a href="{% url 'propiedades:agendar_visita' item.vivienda.id %}" class="btn btn-solicitar">Solicitar Visita</a>
+                        {% endif %}
+                    </div>
+                </div>
             {% empty %}
                 <p>No se encontraron viviendas autorizadas.</p>
             {% endfor %}
-        </ul>
+        </div>
     </div>
 </body>
 </html>
