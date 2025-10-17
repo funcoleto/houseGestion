@@ -122,7 +122,7 @@ class Visita(models.Model):
         return f"Visita de {self.nombre} {self.apellidos} para {self.vivienda.nombre} el {self.fecha_hora.strftime('%d/%m/%Y a las %H:%M')}"
 
 
-class SolicitudDocumentacion(models.Model):
+class SolicitudDeDocumentacion(models.Model):
     """
     Representa una solicitud de documentación a un candidato seleccionado.
     """
@@ -134,7 +134,7 @@ class SolicitudDocumentacion(models.Model):
         ('RECHAZADA', 'Rechazada'),
     ]
 
-    visita = models.OneToOneField(Visita, on_delete=models.CASCADE, related_name="solicitud_documentacion")
+    visita = models.OneToOneField(Visita, on_delete=models.CASCADE, related_name="solicitud_de_documentacion")
     estado = models.CharField(max_length=20, choices=ESTADO_SOLICITUD, default='PENDIENTE')
     token_acceso = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
@@ -143,12 +143,12 @@ class SolicitudDocumentacion(models.Model):
         return f"Solicitud de documentación para {self.visita.nombre} {self.visita.apellidos}"
 
 
-class DocumentacionInquilino(models.Model):
+class InquilinoDocumentacion(models.Model):
     """
     Almacena los datos y documentos de una persona (inquilino) asociados a una
     solicitud de documentación.
     """
-    solicitud = models.ForeignKey(SolicitudDocumentacion, on_delete=models.CASCADE, related_name="documentacion_inquilinos")
+    solicitud = models.ForeignKey(SolicitudDeDocumentacion, on_delete=models.CASCADE, related_name="inquilino_documentacion")
 
     # Datos del inquilino
     nombre_completo = models.CharField(max_length=255)

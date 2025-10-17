@@ -7,8 +7,8 @@ from django.conf import settings
 from django.utils import timezone
 from datetime import datetime, timedelta
 
-from .forms import AccesoArrendatarioForm, AgendarVisitaForm, DocumentacionInquilinoFormSet
-from .models import ArrendatarioAutorizado, Vivienda, Visita, HorarioVisita, SolicitudDocumentacion, DocumentacionInquilino
+from .forms import AccesoArrendatarioForm, AgendarVisitaForm, InquilinoDocumentacionFormSet
+from .models import ArrendatarioAutorizado, Vivienda, Visita, HorarioVisita, SolicitudDeDocumentacion, InquilinoDocumentacion
 
 # --- Vistas del Flujo del Arrendatario (Proceso 1) ---
 
@@ -152,11 +152,11 @@ def gestionar_visita_view(request, token):
 # --- Vistas del Flujo del Proceso 2 ---
 
 def subir_documentos_view(request, token):
-    solicitud = get_object_or_404(SolicitudDocumentacion, token_acceso=token)
+    solicitud = get_object_or_404(SolicitudDeDocumentacion, token_acceso=token)
     if solicitud.estado != 'PENDIENTE':
         return render(request, 'propiedades/subida_documentos_completada.html', {'solicitud': solicitud})
     if request.method == 'POST':
-        formset = DocumentacionInquilinoFormSet(request.POST, request.FILES, queryset=solicitud.documentacion_inquilinos.none())
+        formset = InquilinoDocumentacionFormSet(request.POST, request.FILES, queryset=solicitud.inquilino_documentacion.none())
         if formset.is_valid():
             instances = formset.save(commit=False)
             for instance in instances:
@@ -164,7 +164,28 @@ def subir_documentos_view(request, token):
                 instance.save()
             solicitud.estado = 'COMPLETADA'
             solicitud.save()
+
+            # Notificar al administrador
+            asunto_admin = f"Documentación recibida de {solicitud.visita.nombre} para {solicitud.visita.vivienda.nombre}"
+            enlace_admin = request.build_absolute_uri(
+                reverse('admin:propiedades_solicituddedocumentacion_change', args=[solicitud.id])
+            )
+            contexto_admin = {'solicitud': solicitud, 'enlace_admin': enlace_admin}
+
+            cuerpo_admin = render_to_string('propiedades/emails/notificacion_documentos_recibidos.txt', contexto_admin)
+            html_cuerpo_admin = render_to_string('propiedades/emails/notificacion_documentos_recibidos.html', contexto_admin)
+
+            emails_admin = [admin.email for admin in solicitud.visita.vivienda.administradores.all()]
+            if emails_admin:
+                try:
+                    msg = EmailMultiAlternatives(asunto_admin, cuerpo_admin, settings.DEFAULT_FROM_EMAIL, emails_admin)
+                    msg.attach_alternative(html_cuerpo_admin, "text/html")
+                    msg.send()
+                    print(f"Correo de notificación de documentos recibidos enviado a los administradores.")
+                except Exception as e:
+                    print(f"ERROR al enviar correo de notificación a admin: {e}")
+
             return render(request, 'propiedades/subida_documentos_completada.html', {'solicitud': solicitud})
     else:
-        formset = DocumentacionInquilinoFormSet(queryset=solicitud.documentacion_inquilinos.none())
+        formset = InquilinoDocumentacionFormSet(queryset=solicitud.inquilino_documentacion.none())
     return render(request, 'propiedades/subir_documentos.html', {'solicitud': solicitud, 'formset': formset})

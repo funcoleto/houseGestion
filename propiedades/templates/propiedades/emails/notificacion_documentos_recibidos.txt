@@ -1,0 +1,10 @@
+Hola,
+
+El candidato {{ solicitud.visita.nombre }} {{ solicitud.visita.apellidos }} ha completado la subida de documentación para la vivienda "{{ solicitud.visita.vivienda.nombre }}".
+
+Puedes revisar la solicitud y los documentos subidos desde el panel de administración.
+
+Enlace a la solicitud: {{ enlace_admin }}
+
+Saludos,
+El sistema de Gestión de Viviendas
