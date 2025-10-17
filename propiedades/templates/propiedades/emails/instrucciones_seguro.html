@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Siguientes Pasos para tu Alquiler</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+            <td align="center">
+                <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="padding: 40px 20px; background-color: #27ae60; color: #ffffff; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                            <h1 style="margin: 0; font-size: 24px;">¡Enhorabuena, has sido seleccionado!</h1>
+                        </td>
+                    </tr>
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 30px; color: #333333; line-height: 1.6;">
+                            <p style="margin-top: 0;">Hola {{ visita.nombre }},</p>
+                            <p>Nos complace informarte de que has sido seleccionado como el candidato ideal para la vivienda <strong>{{ visita.vivienda.nombre }}</strong>.</p>
+                            <p>El siguiente paso es recopilar la documentación necesaria para la verificación del seguro de impago. Al continuar, aceptas que esta documentación sea compartida con la aseguradora de la vivienda.</p>
+                            <p>Por favor, haz clic en el siguiente botón para acceder a la página segura donde podrás subir los documentos:</p>
+                            <!-- Button -->
+                            <table border="0" cellspacing="0" cellpadding="0" width="100%">
+                                <tr>
+                                    <td align="center" style="padding: 20px 0;">
+                                        <a href="{{ enlace_subida }}" target="_blank" style="background-color: #27ae60; color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Subir Documentación</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="font-size: 12px; color: #7f8c8d;">Este enlace es único y solo para ti. No lo compartas.</p>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="padding: 20px; font-size: 12px; color: #7f8c8d; background-color: #ecf0f1; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+                            <p style="margin: 0;">Gestión de Viviendas App</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Administrador, Vivienda, HorarioVisita, ArrendatarioAutorizado, Visita
+from .models import Administrador, Vivienda, HorarioVisita, ArrendatarioAutorizado, Visita, SolicitudSeguro
 
 class HorarioVisitaInline(admin.TabularInline):
     """
@@ -110,3 +110,42 @@ class VisitaAdmin(admin.ModelAdmin):
     @admin.action(description="Cancelar seleccionadas (Otro motivo)")
     def cancelar_por_otro_motivo(self, request, queryset):
         self._cancelar_visitas(request, queryset, "La visita ha sido cancelada por el administrador por otros motivos.")
+
+    @admin.action(description="Iniciar proceso de seguro para el candidato")
+    def iniciar_proceso_seguro(self, request, queryset):
+        if queryset.count() > 1:
+            self.message_user(request, "Por favor, selecciona solo un candidato a la vez para iniciar el proceso.", level='error')
+            return
+
+        visita = queryset.first()
+        if hasattr(visita, 'solicitud_seguro'):
+            self.message_user(request, f"El candidato {visita.nombre} ya tiene una solicitud de seguro en proceso.", level='warning')
+            return
+
+        solicitud = SolicitudSeguro.objects.create(visita=visita)
+
+        # Enviar email al candidato
+        asunto = f"Siguientes pasos para el alquiler de {visita.vivienda.nombre}"
+        enlace_subida = request.build_absolute_uri(
+            reverse('propiedades:subir_documentos_seguro', args=[solicitud.token_acceso])
+        )
+        contexto_email = {'visita': visita, 'enlace_subida': enlace_subida}
+
+        cuerpo_mensaje = render_to_string('propiedades/emails/instrucciones_seguro.txt', contexto_email)
+        html_cuerpo_mensaje = render_to_string('propiedades/emails/instrucciones_seguro.html', contexto_email)
+
+        try:
+            msg = EmailMultiAlternatives(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, [visita.email])
+            msg.attach_alternative(html_cuerpo_mensaje, "text/html")
+            msg.send()
+            self.message_user(request, f"Se ha enviado un correo con instrucciones a {visita.nombre}.")
+            print(f"Correo de inicio de proceso de seguro enviado a {visita.email}.")
+        except Exception as e:
+            self.message_user(request, f"No se pudo enviar el correo a {visita.nombre}. Error: {e}", level='error')
+            print(f"ERROR al enviar correo de inicio de proceso de seguro: {e}")
+
+@admin.register(SolicitudSeguro)
+class SolicitudSeguroAdmin(admin.ModelAdmin):
+    list_display = ('visita', 'estado', 'fecha_creacion')
+    list_filter = ('estado', 'fecha_creacion')
+    readonly_fields = ('token_acceso',)

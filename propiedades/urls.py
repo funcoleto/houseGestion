@@ -26,4 +26,7 @@ urlpatterns = [
 
     # Página para que el usuario elija a qué vivienda quiere solicitar visita
     path('seleccionar-vivienda/', views.seleccionar_vivienda_view, name='seleccionar_vivienda'),
+
+    # Página para que el candidato suba los documentos para el seguro
+    path('solicitud-seguro/<uuid:token>/', views.subir_documentos_seguro_view, name='subir_documentos_seguro'),
 ]

@@ -7,8 +7,8 @@ from django.conf import settings
 from django.utils import timezone
 from datetime import datetime, timedelta
 
-from .forms import AccesoArrendatarioForm, AgendarVisitaForm
-from .models import ArrendatarioAutorizado, Vivienda, Visita, HorarioVisita
+from .forms import AccesoArrendatarioForm, AgendarVisitaForm, DocumentoInquilinoFormSet
+from .models import ArrendatarioAutorizado, Vivienda, Visita, HorarioVisita, SolicitudSeguro, DocumentoInquilino
 
 # --- Vistas del Flujo del Arrendatario (Proceso 1) ---
 
@@ -21,26 +21,17 @@ def acceso_arrendatario_view(request):
         if form.is_valid():
             telefono = form.cleaned_data['telefono']
 
-            # Primero, comprobamos si este teléfono ya tiene una visita confirmada.
-            visita_activa = Visita.objects.filter(telefono=telefono, estado='CONFIRMADA').first()
-            if visita_activa:
-                # Si ya tiene una visita, lo redirigimos a la página de gestión.
-                return redirect(reverse('propiedades:gestionar_visita', args=[visita_activa.cancelacion_token]))
-
             autorizaciones = ArrendatarioAutorizado.objects.filter(telefono=telefono)
             viviendas_ids = list(autorizaciones.values_list('vivienda_id', flat=True))
 
             if not viviendas_ids:
                 form.add_error('telefono', 'Este número de teléfono no está autorizado para visitar ninguna vivienda.')
             else:
+                # Guardamos los datos en la sesión y redirigimos siempre a la página de selección.
                 request.session['telefono_autorizado'] = telefono
                 request.session['viviendas_autorizadas_ids'] = viviendas_ids
                 request.session.save()
-
-                if len(viviendas_ids) == 1:
-                    return redirect(reverse('propiedades:agendar_visita', args=[viviendas_ids[0]]))
-                else:
-                    return redirect(reverse('propiedades:seleccionar_vivienda'))
+                return redirect(reverse('propiedades:seleccionar_vivienda'))
     else:
         form = AccesoArrendatarioForm()
 
@@ -221,16 +212,68 @@ def gestionar_visita_view(request, token):
 
 def seleccionar_vivienda_view(request):
     """
-    Muestra una lista de viviendas autorizadas para que el usuario elija
-    a cuál quiere solicitar una visita.
+    Muestra una lista de viviendas autorizadas y el estado de la visita para cada una.
     """
+    telefono = request.session.get('telefono_autorizado')
     viviendas_ids = request.session.get('viviendas_autorizadas_ids', [])
-    if not viviendas_ids:
-        # Si no hay viviendas en la sesión, redirigimos al inicio del flujo.
+
+    if not telefono or not viviendas_ids:
         return redirect(reverse('propiedades:acceso_arrendatario'))
 
-    viviendas = Vivienda.objects.filter(id__in=viviendas_ids)
-    return render(request, 'propiedades/seleccionar_vivienda.html', {'viviendas': viviendas})
+    viviendas_autorizadas = Vivienda.objects.filter(id__in=viviendas_ids)
+    visitas_activas = Visita.objects.filter(
+        telefono=telefono,
+        vivienda_id__in=viviendas_ids,
+        estado='CONFIRMADA'
+    ).values('vivienda_id', 'cancelacion_token')
+
+    mapa_visitas = {item['vivienda_id']: item['cancelacion_token'] for item in visitas_activas}
+
+    viviendas_con_estado = []
+    for vivienda in viviendas_autorizadas:
+        token = mapa_visitas.get(vivienda.id)
+        viviendas_con_estado.append({
+            'vivienda': vivienda,
+            'visita_token': token
+        })
+
+    return render(request, 'propiedades/seleccionar_vivienda.html', {'viviendas_con_estado': viviendas_con_estado})
+
+
+
+def subir_documentos_seguro_view(request, token):
+    """
+    Página para que el candidato suba sus documentos y los de otros inquilinos.
+    """
+    solicitud = get_object_or_404(SolicitudSeguro, token_acceso=token)
+
+    if solicitud.estado != 'PENDIENTE':
+        # Si la solicitud ya no está pendiente, mostramos un mensaje.
+        return render(request, 'propiedades/subida_documentos_completada.html', {'solicitud': solicitud})
+
+    if request.method == 'POST':
+        formset = DocumentoInquilinoFormSet(request.POST, request.FILES, queryset=solicitud.documentos_inquilinos.none())
+
+        if formset.is_valid():
+            instances = formset.save(commit=False)
+            for instance in instances:
+                instance.solicitud = solicitud
+                instance.save()
+
+            # Marcar la solicitud como completada
+            solicitud.estado = 'COMPLETADA'
+            solicitud.save()
+
+            # TODO: Enviar email de notificación al administrador
+
+            return render(request, 'propiedades/subida_documentos_completada.html', {'solicitud': solicitud})
+    else:
+        formset = DocumentoInquilinoFormSet(queryset=solicitud.documentos_inquilinos.none())
+
+    return render(request, 'propiedades/subir_documentos_seguro.html', {
+        'solicitud': solicitud,
+        'formset': formset
+    })
 
 
 # Vista de ejemplo, mantener por ahora para que las URLs no fallen.

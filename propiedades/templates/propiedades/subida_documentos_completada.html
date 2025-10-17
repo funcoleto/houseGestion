@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación Recibida - Gestión de Viviendas</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f4f7f6; color: #333; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+        .container { background-color: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); max-width: 500px; width: 100%; }
+        .icon { font-size: 48px; color: #27ae60; margin-bottom: 20px; }
+        h1 { color: #2c3e50; margin-bottom: 16px; }
+        p { line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">✓</div>
+        <h1>Documentación Recibida</h1>
+        {% if solicitud.estado == 'COMPLETADA' %}
+            <p>Gracias, {{ solicitud.visita.nombre }}. Hemos recibido tu documentación correctamente. El administrador la revisará y se pondrá en contacto contigo a la brevedad.</p>
+        {% else %}
+            <p>El estado actual de tu solicitud es: <strong>{{ solicitud.get_estado_display }}</strong>. Ya no es necesario que subas más documentos.</p>
+        {% endif %}
+        <p>Ya puedes cerrar esta ventana.</p>
+    </div>
+</body>
+</html>
