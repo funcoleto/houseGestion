@@ -131,3 +131,26 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# --- CONFIGURACIÓN DE FICHEROS MEDIA (subidas de usuarios) ---
+# URL pública para acceder a los ficheros subidos.
+MEDIA_URL = '/media/'
+# Ruta en el sistema de ficheros donde se guardarán los ficheros.
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# --- CONFIGURACIÓN DE EMAIL ---
+# Durante el desarrollo, los correos se mostrarán en la consola.
+# Esto evita tener que configurar un servidor de correo real para probar.
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Para pasar a producción, comenta la línea de arriba y descomenta las siguientes.
+# Deberás configurar estas variables de entorno en tu servidor.
+#
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = os.environ.get('EMAIL_HOST')  # Ej: 'smtp.gmail.com'
+# EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+# EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 't')
+# EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')  # Tu dirección de correo
+# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD') # Tu contraseña de aplicación
+# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

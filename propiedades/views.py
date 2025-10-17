@@ -1,6 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import HttpResponse, HttpResponseForbidden
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.conf import settings
 from datetime import datetime, timedelta
 
 from .forms import AccesoArrendatarioForm, AgendarVisitaForm
@@ -89,13 +92,16 @@ def agendar_visita_view(request, vivienda_id):
             visita.fecha_hora = datetime.fromisoformat(form.cleaned_data['horario_disponible'])
             visita.save()
 
-            # Simulación de envío de email
-            print(f"--- EMAIL DE CONFIRMACIÓN (simulado) ---")
-            print(f"Para: {visita.email}")
-            print(f"Asunto: Confirmación de tu visita para {vivienda.nombre}")
-            print(f"Cuerpo: Hola {visita.nombre}, tu visita está confirmada para el {visita.fecha_hora.strftime('%d/%m/%Y a las %H:%M')}.")
-            print(f"Para cancelar, visita: {request.build_absolute_uri(reverse('propiedades:cancelar_visita', args=[visita.cancelacion_token]))}")
-            print(f"--------------------------------------")
+            # Enviar email de confirmación al arrendatario
+            asunto = f"Confirmación de tu visita para {vivienda.nombre}"
+            contexto_email = {
+                'visita': visita,
+                'vivienda': vivienda,
+                'enlace_cancelacion': request.build_absolute_uri(reverse('propiedades:cancelar_visita', args=[visita.cancelacion_token]))
+            }
+            cuerpo_mensaje = render_to_string('propiedades/emails/confirmacion_visita.txt', contexto_email)
+
+            send_mail(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, [visita.email])
 
             return redirect(reverse('propiedades:confirmacion_visita', args=[visita.cancelacion_token]))
     else:
@@ -130,11 +136,14 @@ def cancelar_visita_view(request, token):
             visita.veces_cancelada += 1
             visita.save()
 
-            # Simulación de email de notificación al administrador
-            print(f"--- EMAIL DE NOTIFICACIÓN A ADMIN (simulado) ---")
-            print(f"Asunto: Visita cancelada para {visita.vivienda.nombre}")
-            print(f"Cuerpo: La visita de {visita.nombre} para el {visita.fecha_hora.strftime('%d/%m/%Y')} ha sido cancelada por el usuario.")
-            print(f"---------------------------------------------")
+            # Enviar email de notificación a todos los administradores de la vivienda
+            asunto = f"[Cancelación] Visita para {visita.vivienda.nombre} el {visita.fecha_hora.strftime('%d/%m')}"
+            contexto_email = {'visita': visita}
+            cuerpo_mensaje = render_to_string('propiedades/emails/notificacion_cancelacion_admin.txt', contexto_email)
+
+            emails_admin = [admin.email for admin in visita.vivienda.administradores.all()]
+            if emails_admin:
+                send_mail(asunto, cuerpo_mensaje, settings.DEFAULT_FROM_EMAIL, emails_admin)
 
             mensaje = "Tu visita ha sido cancelada con éxito."
 
