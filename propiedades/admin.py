@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Administrador, Vivienda, HorarioVisita
+from .models import Administrador, Vivienda, HorarioVisita, ArrendatarioAutorizado
 
 class HorarioVisitaInline(admin.TabularInline):
     """
@@ -7,6 +7,14 @@ class HorarioVisitaInline(admin.TabularInline):
     """
     model = HorarioVisita
     extra = 1 # Muestra un formulario extra para añadir un nuevo horario.
+    ordering = ('fecha', 'hora_inicio')
+
+class ArrendatarioAutorizadoInline(admin.TabularInline):
+    """
+    Permite editar los arrendatarios autorizados directamente en la vista de la vivienda.
+    """
+    model = ArrendatarioAutorizado
+    extra = 1 # Muestra un formulario extra.
 
 @admin.register(Vivienda)
 class ViviendaAdmin(admin.ModelAdmin):
@@ -16,7 +24,10 @@ class ViviendaAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'direccion_completa', 'referencia_catastral', 'precio_mensualidad')
     search_fields = ('nombre', 'referencia_catastral', 'direccion_completa')
     filter_horizontal = ('administradores',)
-    inlines = [HorarioVisitaInline]
+    inlines = [
+        ArrendatarioAutorizadoInline,
+        HorarioVisitaInline,
+    ]
 
 @admin.register(Administrador)
 class AdministradorAdmin(admin.ModelAdmin):
@@ -26,6 +37,14 @@ class AdministradorAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'email', 'telefono')
     search_fields = ('nombre', 'email')
 
-# No es estrictamente necesario registrar HorarioVisita aquí si solo se gestiona
-# a través de Vivienda, pero lo hacemos para permitir la gestión directa si fuera necesario.
-admin.site.register(HorarioVisita)
+# Registramos los otros modelos para que también se puedan gestionar de forma independiente.
+@admin.register(HorarioVisita)
+class HorarioVisitaAdmin(admin.ModelAdmin):
+    list_display = ('vivienda', 'fecha', 'hora_inicio', 'hora_fin')
+    list_filter = ('vivienda', 'fecha')
+
+@admin.register(ArrendatarioAutorizado)
+class ArrendatarioAutorizadoAdmin(admin.ModelAdmin):
+    list_display = ('vivienda', 'telefono')
+    list_filter = ('vivienda',)
+    search_fields = ('telefono',)
