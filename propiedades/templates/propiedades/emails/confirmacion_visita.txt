@@ -1,0 +1,15 @@
+Hola {{ visita.nombre }},
+
+¡Tu visita para la vivienda "{{ vivienda.nombre }}" ha sido confirmada con éxito!
+
+Aquí tienes los detalles:
+- Vivienda: {{ vivienda.nombre }}
+- Dirección: {{ vivienda.direccion_completa }}
+- Fecha y Hora: {{ visita.fecha_hora|date:"d \d\e F \d\e Y \a \l\a\s H:i" }}
+
+Si necesitas cancelar tu visita, puedes hacerlo a través del siguiente enlace:
+{{ enlace_cancelacion }}
+
+¡Gracias por tu interés!
+
+El equipo de Gestión de Viviendas

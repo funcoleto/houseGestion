@@ -128,3 +128,49 @@ Esta sección describe cómo probar el flujo de solicitud de visitas implementad
 
 *   Vuelve al panel de administración y ve a la sección "Visitas".
 *   Verás la nueva visita que has creado, con su estado ("CONFIRMADA" o "CANCELADA").
+
+---
+
+## ⚙️ Configuración del Envío de Correos (Opcional)
+
+Por defecto, la aplicación está configurada para mostrar los correos electrónicos en la consola donde ejecutas `runserver`. Esto es ideal para el desarrollo.
+
+Si quieres que la aplicación envíe correos reales a través de un servidor SMTP (como Gmail), sigue estos pasos:
+
+1.  **Modifica `gestion_viviendas/settings.py`:**
+    *   **Comenta** la línea `EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'`.
+    *   **Descomenta** las líneas de configuración de `EMAIL_BACKEND` para SMTP.
+
+2.  **Configura las Variables de Entorno:**
+    Necesitarás crear un fichero `.env` en la raíz del proyecto para almacenar tus credenciales de forma segura.
+
+    *   **Crea el fichero `.env`:**
+        ```
+        touch .env
+        ```
+
+    *   **Añade las siguientes variables a tu fichero `.env`** (reemplaza los valores con los tuyos):
+        ```
+        # Ejemplo para Gmail
+        EMAIL_HOST=smtp.gmail.com
+        EMAIL_PORT=587
+        EMAIL_USE_TLS=True
+        EMAIL_HOST_USER=tu-correo@gmail.com
+        EMAIL_HOST_PASSWORD=tu-contraseña-de-aplicacion
+        ```
+        **Importante para Gmail:** No uses tu contraseña normal. Debes generar una "Contraseña de aplicación" desde la configuración de seguridad de tu cuenta de Google.
+
+3.  **Instala `python-dotenv`:**
+    Para que Django pueda leer el fichero `.env`, necesitas instalar una librería adicional:
+    ```bash
+    pip install python-dotenv
+    ```
+
+4.  **Modifica `manage.py` y `gestion_viviendas/wsgi.py`:**
+    Añade las siguientes líneas al principio de ambos ficheros para que carguen las variables de entorno al iniciar la aplicación:
+    ```python
+    from dotenv import load_dotenv
+    load_dotenv()
+    ```
+
+¡Y listo! La próxima vez que inicies el servidor, la aplicación intentará enviar correos usando las credenciales que has configurado.

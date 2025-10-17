@@ -1,0 +1,14 @@
+Hola,
+
+Se ha cancelado una visita para la vivienda "{{ visita.vivienda.nombre }}".
+
+Detalles de la visita cancelada:
+- Arrendatario: {{ visita.nombre }} {{ visita.apellidos }}
+- Email: {{ visita.email }}
+- Teléfono: {{ visita.telefono }}
+- Fecha y Hora que tenía reservada: {{ visita.fecha_hora|date:"d \d\e F \d\e Y \a \l\a\s H:i" }}
+
+Este horario ha quedado libre de nuevo en el sistema.
+
+Saludos,
+El sistema de Gestión de Viviendas

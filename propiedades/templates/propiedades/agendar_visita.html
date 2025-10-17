@@ -80,6 +80,32 @@
             <h2>{{ vivienda.nombre }}</h2>
             <p><strong>Dirección:</strong> {{ vivienda.direccion_completa }}</p>
             <p><strong>Precio:</strong> {{ vivienda.precio_mensualidad }} €/mes</p>
+
+            {% if vivienda.link_anuncio %}
+                <p><strong><a href="{{ vivienda.link_anuncio }}" target="_blank">Ver anuncio original</a></strong></p>
+            {% endif %}
+        </div>
+
+        <div class="documentos-info">
+            <h3>Documentos de Ejemplo</h3>
+            <p>Aquí puedes consultar algunos documentos de ejemplo para esta vivienda:</p>
+            <ul>
+                {% if vivienda.contrato_modelo %}
+                    <li><a href="{{ vivienda.contrato_modelo.url }}" target="_blank">Modelo de Contrato</a></li>
+                {% endif %}
+                {% if vivienda.factura_luz %}
+                    <li><a href="{{ vivienda.factura_luz.url }}" target="_blank">Ejemplo de Factura de Luz</a></li>
+                {% endif %}
+                {% if vivienda.factura_agua %}
+                    <li><a href="{{ vivienda.factura_agua.url }}" target="_blank">Ejemplo de Factura de Agua</a></li>
+                {% endif %}
+                {% if vivienda.factura_gas %}
+                    <li><a href="{{ vivienda.factura_gas.url }}" target="_blank">Ejemplo de Factura de Gas</a></li>
+                {% endif %}
+            </ul>
+            {% if not vivienda.contrato_modelo and not vivienda.factura_luz and not vivienda.factura_agua and not vivienda.factura_gas %}
+                <p><em>No hay documentos de ejemplo disponibles para esta vivienda.</em></p>
+            {% endif %}
         </div>
 
         <form method="post">
